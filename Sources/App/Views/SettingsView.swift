@@ -75,13 +75,15 @@ struct SettingsContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .frame(maxHeight: maxSettingsHeight)
+            .fixedSize(horizontal: false, vertical: true)
 
             // Footer
             footer
                 .padding(.horizontal, 16)
                 .padding(.bottom, 12)
         }
-        .frame(maxHeight: maxSettingsHeight)
         .onAppear {
             hooksEnabled = settings.hook.isHookEnabled()
             hooksInstalled = HookInstaller.isInstalled()

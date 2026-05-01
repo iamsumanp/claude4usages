@@ -89,10 +89,7 @@ public final class MenuBarIconRenderer {
             icon = createCombinedPercentageIcon(data: data, types: activeTypes, isMonochrome: isMonochrome, button: button)
 
         case .iconOnly:
-            let iconName = isMonochrome ? "AppIconReverse" : "AppIcon"
-            if let appIcon = NSImage(named: iconName), let iconCopy = appIcon.copy() as? NSImage {
-                iconCopy.size = NSSize(width: 18, height: 18)
-                iconCopy.isTemplate = isMonochrome
+            if let iconCopy = loadAppIconImage(isMonochrome: isMonochrome) {
                 icon = iconCopy
             } else {
                 icon = createSimpleCircleIcon()
@@ -194,13 +191,9 @@ public final class MenuBarIconRenderer {
         isMonochrome: Bool,
         button: NSStatusBarButton?
     ) -> NSImage {
-        let iconName = isMonochrome ? "AppIconReverse" : "AppIcon"
-        guard let appIcon = NSImage(named: iconName), let appIconCopy = appIcon.copy() as? NSImage else {
+        guard let appIconCopy = loadAppIconImage(isMonochrome: isMonochrome) else {
             return createCombinedPercentageIcon(data: data, types: types, isMonochrome: isMonochrome, button: button)
         }
-
-        appIconCopy.size = NSSize(width: 18, height: 18)
-        appIconCopy.isTemplate = isMonochrome
 
         let percentageIcons = types.compactMap { type in
             createIconForType(type, data: data, isMonochrome: isMonochrome, button: button)
@@ -410,6 +403,16 @@ public final class MenuBarIconRenderer {
         }
 
         image.unlockFocus()
+        return image
+    }
+
+    private func loadAppIconImage(isMonochrome: Bool) -> NSImage? {
+        guard let url = Bundle.module.url(forResource: "AppIcon", withExtension: "png"),
+              let image = NSImage(contentsOf: url) else {
+            return nil
+        }
+        image.size = NSSize(width: 18, height: 18)
+        image.isTemplate = isMonochrome
         return image
     }
 }

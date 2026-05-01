@@ -15,7 +15,10 @@ let package = Package(
         .target(
             name: "Infrastructure",
             dependencies: ["Domain"],
-            path: "Sources/Infrastructure"
+            path: "Sources/Infrastructure",
+            resources: [
+                .process("MenuBar/Resources"),
+            ]
         ),
         .executableTarget(
             name: "claude4usages",

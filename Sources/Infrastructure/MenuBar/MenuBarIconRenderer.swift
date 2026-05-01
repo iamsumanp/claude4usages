@@ -66,12 +66,14 @@ public final class MenuBarIconRenderer {
     ///   - usageData: Usage data snapshot (nil renders a bare placeholder)
     ///   - hasUpdate: Whether an update badge should be shown
     ///   - isSessionActive: Whether a Claude Code session is currently active
+    ///   - spinnerPhase: 0..<1 phase to draw a rotating spinner around the icon. nil = no spinner.
     ///   - button: Status bar button (used to read effective appearance)
     /// - Returns: The rendered icon image
     public func createIcon(
         usageData: IconUsageData?,
         hasUpdate: Bool,
         isSessionActive: Bool = false,
+        spinnerPhase: Double? = nil,
         button: NSStatusBarButton?
     ) -> NSImage {
         guard let data = usageData else {
@@ -110,8 +112,45 @@ public final class MenuBarIconRenderer {
         if hasUpdate {
             icon = addBadgeToImage(icon)
         }
+        if let phase = spinnerPhase, isSessionActive {
+            icon = addSpinnerArc(to: icon, phase: phase)
+        }
 
         return icon
+    }
+
+    /// Overlays a rotating arc around the leading edge of the icon to indicate
+    /// activity. Phase is 0..<1 and represents one full rotation.
+    private func addSpinnerArc(to baseImage: NSImage, phase: Double) -> NSImage {
+        let pad: CGFloat = 4
+        let originalSize = baseImage.size
+        let expanded = NSSize(width: originalSize.width + pad * 2, height: originalSize.height + pad * 2)
+
+        let result = NSImage(size: expanded)
+        result.lockFocus()
+        defer {
+            result.unlockFocus()
+            result.isTemplate = false
+        }
+
+        // Draw the original icon centred
+        baseImage.draw(in: NSRect(origin: NSPoint(x: pad, y: pad), size: originalSize))
+
+        // Draw arc — a 90° wedge that rotates over time
+        let center = NSPoint(x: expanded.width / 2, y: expanded.height / 2)
+        let radius = (min(expanded.width, expanded.height) / 2) - 1
+        let startDeg = phase * 360
+        let endDeg = startDeg + 90
+
+        let path = NSBezierPath()
+        path.appendArc(withCenter: center, radius: radius, startAngle: CGFloat(startDeg), endAngle: CGFloat(endDeg), clockwise: false)
+        path.lineWidth = 1.5
+        path.lineCapStyle = .round
+
+        NSColor(srgbRed: 0.30, green: 0.78, blue: 0.45, alpha: 1.0).setStroke()
+        path.stroke()
+
+        return result
     }
 
     /// Creates an icon for a single limit type, suitable for testing or previews.

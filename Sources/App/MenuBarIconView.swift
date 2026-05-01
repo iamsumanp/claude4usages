@@ -14,16 +14,30 @@ struct MenuBarIconView: View {
     let isSessionActive: Bool
 
     var body: some View {
-        Image(nsImage: rendered)
+        if isSessionActive {
+            TimelineView(.animation(minimumInterval: 0.05)) { context in
+                Image(nsImage: rendered(spinnerPhase: phase(from: context.date)))
+            }
+        } else {
+            Image(nsImage: rendered(spinnerPhase: nil))
+        }
     }
 
-    private var rendered: NSImage {
+    /// Maps the timeline's wall-clock to a 0..<1 phase that completes one full
+    /// rotation per second.
+    private func phase(from date: Date) -> Double {
+        let secondsSinceReference = date.timeIntervalSinceReferenceDate
+        return secondsSinceReference.truncatingRemainder(dividingBy: 1.0)
+    }
+
+    private func rendered(spinnerPhase: Double?) -> NSImage {
         let renderer = MenuBarIconRenderer(settings: rendererSettings)
         let iconData = makeIconUsageData(from: snapshot)
         return renderer.createIcon(
             usageData: iconData,
             hasUpdate: hasUpdate,
             isSessionActive: isSessionActive,
+            spinnerPhase: spinnerPhase,
             button: nil
         )
     }

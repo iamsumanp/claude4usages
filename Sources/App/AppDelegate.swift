@@ -231,22 +231,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Process-based active detection
 
-    /// Polls `pgrep -x claude` every 3 seconds.
-    /// Icon is green exactly as long as the `claude` process exists in the OS process list.
+    /// Polls `pgrep -x claude` every 3 seconds on a background thread.
+    /// Only hops to the main actor when the result changes, to update the icon.
     func startProcessPolling() {
         processPollingTask?.cancel()
-        processPollingTask = Task { @MainActor in
+        processPollingTask = Task.detached(priority: .background) { [weak self] in
             while !Task.isCancelled {
-                let active = isClaudeProcessRunning()
-                if active != isIconSessionActive {
-                    isIconSessionActive = active
+                let active = Self.isClaudeProcessRunning()
+                await MainActor.run { [weak self] in
+                    guard let self, active != self.isIconSessionActive else { return }
+                    self.isIconSessionActive = active
                 }
                 try? await Task.sleep(for: .seconds(3))
             }
         }
     }
 
-    private func isClaudeProcessRunning() -> Bool {
+    /// Runs `pgrep -x claude` synchronously on whatever thread calls it.
+    /// Must NOT be called on @MainActor — use Task.detached or a background thread.
+    private static func isClaudeProcessRunning() -> Bool {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
         process.arguments = ["-x", "claude"]

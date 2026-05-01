@@ -3,9 +3,9 @@ import Domain
 import Infrastructure
 import ServiceManagement
 
-/// Observable settings manager for ClaudeBar preferences.
+/// Observable settings manager for claude4usages preferences.
 /// Thin `@Observable` wrapper around `AppSettingsRepository` for SwiftUI reactivity.
-/// All persistence is delegated to the repository (`~/.claudebar/settings.json`).
+/// All persistence is delegated to the repository (`~/.claude4usages/settings.json`).
 @MainActor
 @Observable
 public final class AppSettings {

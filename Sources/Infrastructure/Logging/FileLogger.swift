@@ -3,7 +3,7 @@ import Foundation
 import AppKit
 #endif
 
-/// File-based logger that writes to ~/Library/Logs/ClaudeBar/ClaudeBar.log
+/// File-based logger that writes to ~/Library/Logs/claude4usages/claude4usages.log
 /// Provides user-accessible logs for debugging and support.
 ///
 /// Thread-safety: All file operations are serialized on a dedicated dispatch queue.
@@ -24,7 +24,7 @@ public final class FileLogger: @unchecked Sendable {
     }
     
     private init() {
-        // ~/Library/Logs/ClaudeBar/ClaudeBar.log
+        // ~/Library/Logs/claude4usages/claude4usages.log
         let logsDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Logs", isDirectory: true)
             .appendingPathComponent("claude4usages", isDirectory: true)

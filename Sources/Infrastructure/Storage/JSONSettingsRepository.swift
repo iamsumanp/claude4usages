@@ -5,7 +5,7 @@ import Domain
 /// Implements all settings protocols: AppSettingsRepository + ProviderSettingsRepository
 /// (including all sub-protocols) + HookSettingsRepository.
 ///
-/// Backed by `JSONSettingsStore` reading/writing `~/.claudebar/settings.json`.
+/// Backed by `JSONSettingsStore` reading/writing `~/.claude4usages/settings.json`.
 /// Credentials (tokens, API keys) use UserDefaults for now (Keychain migration later).
 public final class JSONSettingsRepository:
     AppSettingsRepository,

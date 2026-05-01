@@ -554,7 +554,7 @@ struct MenuContentView: View {
             }
 
             // Show daily usage cards from JSONL session analysis (e.g., Claude Code)
-            // Controlled via Settings toggle or ~/.claudebar/settings.json
+            // Controlled via Settings toggle or ~/.claude4usages/settings.json
             if settings.showDailyUsageCards, let report = snapshot.dailyUsageReport {
                 let baseDelay = Double(snapshot.quotas.count + 1) * 0.08
                 LazyVGrid(

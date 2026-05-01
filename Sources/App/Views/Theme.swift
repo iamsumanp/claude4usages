@@ -57,7 +57,7 @@ extension EnvironmentValues {
     }
 }
 
-// MARK: - ClaudeBar App Theme
+// MARK: - claude4usages App Theme
 // Adaptive purple-pink gradients with glassmorphism
 // Distinct aesthetics for light and dark modes
 

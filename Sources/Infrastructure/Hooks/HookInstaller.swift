@@ -1,10 +1,10 @@
 import Foundation
 import Domain
 
-/// Installs and uninstalls ClaudeBar hooks in ~/.claude/settings.json.
+/// Installs and uninstalls claude4usages hooks in ~/.claude/settings.json.
 /// Hook commands use the __claude4usages_hook function wrapper for identification.
 public enum HookInstaller {
-    /// The marker function name used to identify ClaudeBar hooks
+    /// The marker function name used to identify claude4usages hooks
     static let hookMarker = "__claude4usages_hook"
 
     /// The settings file path
@@ -43,7 +43,7 @@ public enum HookInstaller {
         for event in hookEvents {
             var matcherEntries = hooks[event] as? [[String: Any]] ?? [[String: Any]]()
 
-            // Remove any existing ClaudeBar matcher entries for this event
+            // Remove any existing claude4usages matcher entries for this event
             matcherEntries.removeAll { entry in
                 containsClaude4UsagesHook(in: entry)
             }
@@ -66,7 +66,7 @@ public enum HookInstaller {
         try writeSettings(settings)
     }
 
-    /// Uninstalls ClaudeBar hooks from the Claude settings file.
+    /// Uninstalls claude4usages hooks from the Claude settings file.
     /// Preserves hooks from other tools.
     public static func uninstall() throws {
         guard var settings = try? readOrCreateSettings() else { return }
@@ -95,7 +95,7 @@ public enum HookInstaller {
         try writeSettings(settings)
     }
 
-    /// Detects whether ClaudeBar hooks are currently installed.
+    /// Detects whether claude4usages hooks are currently installed.
     public static func isInstalled() -> Bool {
         guard let settings = readSettings(),
               let hooks = settings["hooks"] as? [String: Any] else {
@@ -111,7 +111,7 @@ public enum HookInstaller {
         }
     }
 
-    /// Checks if a matcher entry contains a ClaudeBar hook command.
+    /// Checks if a matcher entry contains a claude4usages hook command.
     private static func containsClaude4UsagesHook(in matcherEntry: [String: Any]) -> Bool {
         guard let innerHooks = matcherEntry["hooks"] as? [[String: Any]] else { return false }
         return innerHooks.contains { hook in

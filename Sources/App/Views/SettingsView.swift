@@ -652,7 +652,7 @@ struct SettingsContentView: View {
                 Spacer()
             }
 
-            Link(destination: URL(string: "https://github.com/tddworks/claudebar")!) {
+            Link(destination: URL(string: "https://github.com/tddworks/ClaudeBar")!) {
                 HStack(spacing: 6) {
                     Image(systemName: "link")
                         .font(.system(size: 11, weight: .semibold))

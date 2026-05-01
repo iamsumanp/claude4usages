@@ -225,46 +225,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hookServer.stop()
     }
 
-    // MARK: - Hook-driven completion pulse
+    // MARK: - Hook-driven completion blink
 
-    private var pulseTimer: Timer?
+    private var blinkTask: Task<Void, Never>?
 
-    /// Smooth opacity pulse when Claude finishes answering.
-    /// Renders the green icon once, then animates button.alphaValue on a sine wave
-    /// (hardware-composited by macOS — no bitmap re-allocation per frame).
+    /// Blinks green 3 times (slowly) when Claude finishes answering.
     private func handleSessionEventForIcon(_ event: SessionEvent) {
         switch event.eventName {
         case .stop, .sessionEnd:
-            startCompletionPulse()
+            blinkTask?.cancel()
+            blinkTask = Task { @MainActor in
+                for _ in 0..<3 {
+                    guard !Task.isCancelled else { return }
+                    isIconSessionActive = true
+                    try? await Task.sleep(for: .milliseconds(1200))
+                    guard !Task.isCancelled else { return }
+                    isIconSessionActive = false
+                    try? await Task.sleep(for: .milliseconds(800))
+                }
+            }
         default:
             break
         }
-    }
-
-    private func startCompletionPulse() {
-        pulseTimer?.invalidate()
-        guard let button = statusItem?.button else { return }
-
-        // Show green icon for the duration of the pulse
-        isIconSessionActive = true
-
-        var elapsed: TimeInterval = 0
-        let pulsePeriod: TimeInterval = 1.6   // seconds per full sine cycle
-        let totalDuration: TimeInterval = 4.8  // 3 full pulses
-
-        pulseTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] timer in
-            elapsed += 0.05
-            guard elapsed < totalDuration else {
-                timer.invalidate()
-                button.alphaValue = 1.0
-                self?.isIconSessionActive = false
-                return
-            }
-            // Sine wave: smoothly oscillates between 0.25 and 1.0
-            let sine = sin(elapsed * 2 * .pi / pulsePeriod)  // -1 … +1
-            button.alphaValue = CGFloat(0.625 + 0.375 * sine) // 0.25 … 1.0
-        }
-        RunLoop.main.add(pulseTimer!, forMode: .common)
     }
 
     // MARK: - Session Notifications

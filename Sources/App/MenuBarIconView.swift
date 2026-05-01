@@ -14,8 +14,11 @@ struct MenuBarIconView: View {
     let isSessionActive: Bool
 
     var body: some View {
-        if isSessionActive {
-            TimelineView(.animation(minimumInterval: 0.05)) { context in
+        if isSessionActive && snapshot != nil {
+            // 5 fps is enough for a smooth-feeling rotation while keeping the
+            // bitmap-allocation cost low. Anything higher noticeably spikes CPU
+            // because each tick re-renders the menu bar NSImage.
+            TimelineView(.animation(minimumInterval: 0.2)) { context in
                 Image(nsImage: rendered(spinnerPhase: phase(from: context.date)))
             }
         } else {
@@ -23,11 +26,11 @@ struct MenuBarIconView: View {
         }
     }
 
-    /// Maps the timeline's wall-clock to a 0..<1 phase that completes one full
-    /// rotation per second.
+    /// Maps wall-clock time to a 0..<1 phase that completes one full rotation
+    /// every 1.5 seconds.
     private func phase(from date: Date) -> Double {
         let secondsSinceReference = date.timeIntervalSinceReferenceDate
-        return secondsSinceReference.truncatingRemainder(dividingBy: 1.0)
+        return (secondsSinceReference / 1.5).truncatingRemainder(dividingBy: 1.0)
     }
 
     private func rendered(spinnerPhase: Double?) -> NSImage {

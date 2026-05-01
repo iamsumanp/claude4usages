@@ -384,10 +384,11 @@ struct MenuContentView: View {
         }
     }
 
-    /// Max height for the overview scroll area (80% of screen or 500pt)
+    /// Max height for the overview scroll area — generous so the popover hugs content
+    /// in the common single-provider layout and only scrolls on tiny screens.
     private var overviewMaxHeight: CGFloat {
         let screenHeight = NSScreen.main?.visibleFrame.height ?? 800
-        return min(screenHeight * 0.8, 500)
+        return min(screenHeight * 0.9, 900)
     }
 
     private func overviewContent(providers: [any AIProvider]) -> some View {

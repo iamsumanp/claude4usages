@@ -76,10 +76,9 @@ public final class MenuBarIconRenderer {
     ) -> NSImage {
         guard let data = usageData else {
             let size = NSSize(width: 22, height: 22)
-            let placeholder = settings.styleMode == .monochrome ?
+            return settings.styleMode == .monochrome ?
                 createCircleTemplateImage(percentage: 0, size: size, button: button, removeBackground: true) :
                 createCircleImage(percentage: 0, size: size, button: button, removeBackground: true)
-            return isSessionActive ? addActiveSessionDot(placeholder) : placeholder
         }
 
         let activeTypes = settings.activeTypes
@@ -92,49 +91,27 @@ public final class MenuBarIconRenderer {
             icon = createCombinedPercentageIcon(data: data, types: activeTypes, isMonochrome: isMonochrome, button: button)
 
         case .iconOnly:
-            if let iconCopy = loadAppIconImage(isMonochrome: isMonochrome) {
+            if let iconCopy = loadAppIconImage(isMonochrome: isMonochrome, sessionActive: isSessionActive) {
                 icon = iconCopy
             } else {
                 icon = createSimpleCircleIcon()
             }
 
         case .both:
-            icon = createCombinedIconWithAppIcon(data: data, types: activeTypes, isMonochrome: isMonochrome, button: button)
+            icon = createCombinedIconWithAppIcon(
+                data: data,
+                types: activeTypes,
+                isMonochrome: isMonochrome,
+                sessionActive: isSessionActive,
+                button: button
+            )
         }
 
         if hasUpdate {
             icon = addBadgeToImage(icon)
         }
-        if isSessionActive {
-            icon = addActiveSessionDot(icon)
-        }
 
         return icon
-    }
-
-    /// Adds a small green dot in the top-left corner indicating an active Claude Code session.
-    /// Subtle but visible — same size as the update badge but green and positioned on the opposite side.
-    private func addActiveSessionDot(_ baseImage: NSImage) -> NSImage {
-        let size = baseImage.size
-        let expandedSize = NSSize(width: size.width + 2.5, height: size.height + 2.5)
-        let dotted = NSImage(size: expandedSize)
-
-        dotted.lockFocus()
-        baseImage.draw(in: NSRect(origin: NSPoint(x: 2.5, y: 0), size: size))
-
-        let radius: CGFloat = 2.0
-        let diameter = radius * 2
-        let dotRect = NSRect(x: 0.5, y: expandedSize.height - diameter - 1.5, width: diameter, height: diameter)
-
-        NSGraphicsContext.saveGraphicsState()
-        NSColor(srgbRed: 0.30, green: 0.78, blue: 0.45, alpha: 1.0).setFill()
-        NSBezierPath(ovalIn: dotRect).fill()
-        NSGraphicsContext.restoreGraphicsState()
-
-        dotted.unlockFocus()
-        // The active-session dot is a colored marker — keep it visible regardless of template flag
-        dotted.isTemplate = false
-        return dotted
     }
 
     /// Creates an icon for a single limit type, suitable for testing or previews.
@@ -220,9 +197,10 @@ public final class MenuBarIconRenderer {
         data: IconUsageData,
         types: [IconLimitType],
         isMonochrome: Bool,
+        sessionActive: Bool = false,
         button: NSStatusBarButton?
     ) -> NSImage {
-        guard let appIconCopy = loadAppIconImage(isMonochrome: isMonochrome) else {
+        guard let appIconCopy = loadAppIconImage(isMonochrome: isMonochrome, sessionActive: sessionActive) else {
             return createCombinedPercentageIcon(data: data, types: types, isMonochrome: isMonochrome, button: button)
         }
 
@@ -234,7 +212,9 @@ public final class MenuBarIconRenderer {
         allIcons.append(contentsOf: percentageIcons)
 
         let combined = combineIcons(allIcons, spacing: 3.0, height: 18)
-        combined.isTemplate = isMonochrome
+        // When the session is active, the AppIcon's green tint is non-template
+        // and the combined image must not be template-tinted (which would erase it).
+        combined.isTemplate = isMonochrome && !sessionActive
         return combined
     }
 
@@ -437,14 +417,44 @@ public final class MenuBarIconRenderer {
         return image
     }
 
-    private func loadAppIconImage(isMonochrome: Bool) -> NSImage? {
+    private func loadAppIconImage(isMonochrome: Bool, sessionActive: Bool = false) -> NSImage? {
         let resourceName = isMonochrome ? "AppIconReverse" : "AppIcon"
         guard let url = Bundle.module.url(forResource: resourceName, withExtension: "png"),
-              let image = NSImage(contentsOf: url) else {
+              let baseImage = NSImage(contentsOf: url) else {
             return nil
         }
-        image.size = NSSize(width: 18, height: 18)
-        image.isTemplate = isMonochrome
-        return image
+
+        let size = NSSize(width: 18, height: 18)
+        baseImage.size = size
+
+        // Inactive: return as-is (template in monochrome, raw colors otherwise)
+        guard sessionActive else {
+            baseImage.isTemplate = isMonochrome
+            return baseImage
+        }
+
+        // Active: bake a green tint into the image and disable template flag
+        // so the green stays even in monochrome mode.
+        let tinted = NSImage(size: size)
+        tinted.lockFocus()
+        defer { tinted.unlockFocus() }
+
+        let rect = NSRect(origin: .zero, size: size)
+        let activeColor = NSColor(srgbRed: 0.30, green: 0.78, blue: 0.45, alpha: 1.0)
+
+        if isMonochrome {
+            // Use the alpha mask of the (white-on-clear) AppIconReverse to fill green
+            baseImage.draw(in: rect)
+            activeColor.set()
+            rect.fill(using: .sourceAtop)
+        } else {
+            // Color icon — multiply with green to keep some shape while signalling active
+            baseImage.draw(in: rect)
+            activeColor.withAlphaComponent(0.55).set()
+            rect.fill(using: .sourceAtop)
+        }
+
+        tinted.isTemplate = false
+        return tinted
     }
 }

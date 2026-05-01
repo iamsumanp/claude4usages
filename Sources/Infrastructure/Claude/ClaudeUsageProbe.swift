@@ -543,14 +543,20 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
     internal func extractReset(labelSubstring: String, text: String) -> String? {
         let lines = text.components(separatedBy: .newlines)
         let label = labelSubstring.lowercased()
+        let clockRegex = try? NSRegularExpression(pattern: #"\d{1,2}:\d{2}"#)
+        let monthRegex = try? NSRegularExpression(pattern: #"(?i)\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b"#)
 
         for (idx, line) in lines.enumerated() where line.lowercased().contains(label) {
             let window = lines.dropFirst(idx).prefix(14)
             for candidate in window {
                 let lower = candidate.lowercased()
-                // Look for "resets" or time indicators like "2h" or "30m"
-                if lower.contains("reset") ||
-                   (lower.contains("in") && (lower.contains("h") || lower.contains("m"))) {
+                let hasReset = lower.contains("reset") || lower.contains("rese")
+                let hasDuration = lower.contains("in ") && (lower.contains("h") || lower.contains("m"))
+                let candidateRange = NSRange(candidate.startIndex..., in: candidate)
+                let hasClock = clockRegex?.firstMatch(in: candidate, range: candidateRange) != nil
+                let hasMonth = monthRegex?.firstMatch(in: candidate, range: candidateRange) != nil
+
+                if hasReset || hasDuration || hasClock || hasMonth {
                     let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
                     return deduplicateResetText(trimmed)
                 }

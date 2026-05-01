@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Environment key for injecting the active theme into the view hierarchy.
 private struct AppThemeKey: EnvironmentKey {
-    nonisolated(unsafe) static var defaultValue: any AppThemeProvider = DarkTheme()
+    nonisolated(unsafe) static var defaultValue: any AppThemeProvider = CLITheme()
 }
 
 extension EnvironmentValues {
@@ -52,9 +52,7 @@ public struct AppThemeProviderModifier: ViewModifier {
     private var effectiveColorScheme: ColorScheme {
         let mode = ThemeMode(rawValue: themeModeId)
         switch mode {
-        case .light: return .light
-        case .dark, .cli, .christmas: return .dark
-        case .system: return systemColorScheme
+        case .cli: return .dark
         case .none:
             // Imported theme — check dark preference
             if let imported = ThemeRegistry.shared.theme(for: themeModeId) as? ImportedTerminalTheme {

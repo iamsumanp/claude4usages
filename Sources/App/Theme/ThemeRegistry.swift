@@ -38,11 +38,7 @@ public final class ThemeRegistry {
 
     /// Register all built-in themes
     private func registerBuiltInThemes() {
-        register(LightTheme())
-        register(DarkTheme())
-        register(SystemTheme())
         register(CLITheme())
-        register(ChristmasTheme())
     }
 
     // MARK: - Public API
@@ -74,21 +70,18 @@ public final class ThemeRegistry {
         themeOrder
     }
 
-    /// The default theme (Dark)
+    /// The default theme (CLI)
     public var defaultTheme: any AppThemeProvider {
-        themes["dark"] ?? DarkTheme()
+        themes["cli"] ?? CLITheme()
     }
 
-    /// Resolve a theme ID to a concrete theme, considering system theme
+    /// Resolve a theme ID to a concrete theme
     /// - Parameters:
-    ///   - id: The theme ID (may be "system")
-    ///   - systemColorScheme: The current system color scheme
+    ///   - id: The theme ID
+    ///   - systemColorScheme: The current system color scheme (unused, kept for API compatibility)
     /// - Returns: The resolved theme
     public func resolveTheme(for id: String, systemColorScheme: ColorScheme) -> any AppThemeProvider {
-        if id == "system" {
-            return systemColorScheme == .dark ? (themes["dark"] ?? DarkTheme()) : (themes["light"] ?? LightTheme())
-        }
-        return themes[id] ?? defaultTheme
+        themes[id] ?? defaultTheme
     }
 
     // MARK: - Imported Themes
@@ -132,41 +125,3 @@ public final class ThemeRegistry {
     }
 }
 
-// MARK: - System Theme (Special)
-
-/// System theme that adapts to macOS appearance.
-/// This is a placeholder - the actual resolution happens in ThemeRegistry.resolveTheme()
-public struct SystemTheme: AppThemeProvider {
-    public let id = "system"
-    public let displayName = "System"
-    public let icon = "circle.lefthalf.filled"
-
-    // System theme delegates to Dark theme by default
-    // The actual theme is resolved at runtime based on system appearance
-    private let delegate = DarkTheme()
-
-    public var backgroundGradient: LinearGradient { delegate.backgroundGradient }
-    public var showBackgroundOrbs: Bool { delegate.showBackgroundOrbs }
-    public var cardGradient: LinearGradient { delegate.cardGradient }
-    public var glassBackground: Color { delegate.glassBackground }
-    public var glassBorder: Color { delegate.glassBorder }
-    public var glassHighlight: Color { delegate.glassHighlight }
-    public var cardCornerRadius: CGFloat { delegate.cardCornerRadius }
-    public var pillCornerRadius: CGFloat { delegate.pillCornerRadius }
-    public var textPrimary: Color { delegate.textPrimary }
-    public var textSecondary: Color { delegate.textSecondary }
-    public var textTertiary: Color { delegate.textTertiary }
-    public var fontDesign: Font.Design { delegate.fontDesign }
-    public var statusHealthy: Color { delegate.statusHealthy }
-    public var statusWarning: Color { delegate.statusWarning }
-    public var statusCritical: Color { delegate.statusCritical }
-    public var statusDepleted: Color { delegate.statusDepleted }
-    public var accentPrimary: Color { delegate.accentPrimary }
-    public var accentSecondary: Color { delegate.accentSecondary }
-    public var accentGradient: LinearGradient { delegate.accentGradient }
-    public var pillGradient: LinearGradient { delegate.pillGradient }
-    public var shareGradient: LinearGradient { delegate.shareGradient }
-    public var hoverOverlay: Color { delegate.hoverOverlay }
-    public var pressedOverlay: Color { delegate.pressedOverlay }
-    public var progressTrack: Color { delegate.progressTrack }
-}

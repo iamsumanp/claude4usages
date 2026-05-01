@@ -44,14 +44,10 @@ struct MenuContentView: View {
 
             // Background orbs (if theme supports them)
             if theme.showBackgroundOrbs {
-                if theme.id == "christmas" {
-                    ChristmasBackgroundOrbs()
-                } else {
-                    backgroundOrbs
-                }
+                backgroundOrbs
             }
 
-            // Theme overlay (e.g., snowfall for Christmas)
+            // Theme overlay (if any)
             theme.overlayView
 
             if showSettings {
@@ -251,32 +247,16 @@ struct MenuContentView: View {
                     ProviderIconView(providerId: selectedProviderId, size: 38)
                 }
 
-                // Christmas star sparkle overlay
-                if theme.id == "christmas" {
-                    Image(systemName: "sparkle")
-                        .font(.system(size: 10))
-                        .foregroundStyle(theme.accentPrimary)
-                        .offset(x: 14, y: -14)
-                }
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
-                    Text("claude4usages")
-                        .font(.system(size: 18, weight: .bold, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-
-                    // Christmas gift icon
-                    if theme.id == "christmas" {
-                        Image(systemName: "gift.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(theme.accentPrimary)
-                    }
-                }
+                Text("claude4usages")
+                    .font(.system(size: 18, weight: .bold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
 
                 Text(headerSubtitle)
                     .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.id == "cli" ? theme.accentPrimary : theme.textSecondary)
+                    .foregroundStyle(theme.accentPrimary)
             }
 
             Spacer()
@@ -289,11 +269,7 @@ struct MenuContentView: View {
     }
 
     private var headerSubtitle: String {
-        switch theme.id {
-        case "cli": return "> usage monitor"
-        case "christmas": return "Happy Holidays!"
-        default: return "AI Usage Monitor"
-        }
+        "> usage monitor"
     }
 
     /// Status of the currently selected provider

@@ -49,7 +49,6 @@ struct SettingsContentView: View {
             // Scrollable Content
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 12) {
-                    themeCard
                     displayModeCard
                     menuBarIconCard
                     overviewModeCard
@@ -88,71 +87,6 @@ struct SettingsContentView: View {
             hooksEnabled = settings.hook.isHookEnabled()
             hooksInstalled = HookInstaller.isInstalled()
         }
-    }
-
-    // MARK: - Theme Card
-
-    /// Convert ThemeMode to string for settings storage
-    private var currentThemeMode: ThemeMode {
-        ThemeMode(rawValue: settings.themeMode) ?? .system
-    }
-
-    private var themeCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(theme.accentGradient)
-                        .frame(width: 32, height: 32)
-
-                    Image(systemName: currentThemeMode.icon)
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(theme.id == "cli" ? theme.textPrimary : .white)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Appearance")
-                        .font(.system(size: 14, weight: .bold, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-
-                    Text("Choose your theme")
-                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-
-                Spacer()
-            }
-
-            // Theme options grid
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 8),
-                GridItem(.flexible(), spacing: 8)
-            ], spacing: 8) {
-                ForEach(ThemeRegistry.shared.allThemes, id: \.id) { registeredTheme in
-                    ThemeOptionButton(
-                        themeProvider: registeredTheme,
-                        isSelected: settings.themeMode == registeredTheme.id
-                    ) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            settings.themeMode = registeredTheme.id
-                        }
-                    }
-                }
-            }
-
-            ThemeImportButton()
-                .frame(maxWidth: .infinity)
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                .fill(theme.cardGradient)
-                .overlay(
-                    RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                        .stroke(theme.glassBorder, lineWidth: 1)
-                )
-        )
     }
 
     // MARK: - Display Mode Card
@@ -1049,82 +983,6 @@ struct SettingsContentView: View {
             }
             .buttonStyle(.plain)
         }
-    }
-}
-
-// MARK: - Theme Option Button
-
-struct ThemeOptionButton: View {
-    let themeProvider: any AppThemeProvider
-    let isSelected: Bool
-    let action: () -> Void
-
-    @Environment(\.appTheme) private var theme
-    @State private var isHovering = false
-
-    private var isImported: Bool {
-        ThemeRegistry.shared.isImported(id: themeProvider.id)
-    }
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(themeProvider.accentGradient)
-                        .frame(width: 28, height: 28)
-
-                    Image(systemName: themeProvider.icon)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(themeProvider.id == "cli" ? Color.black : .white)
-                }
-
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(themeProvider.displayName)
-                        .font(.system(size: 11, weight: .medium, design: themeProvider.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                        .lineLimit(1)
-
-                    if let subtitle = themeProvider.subtitle {
-                        Text(subtitle)
-                            .font(.system(size: 8, weight: .medium))
-                            .foregroundStyle(themeProvider.accentPrimary)
-                    }
-                }
-
-                Spacer()
-
-                if isImported {
-                    Button {
-                        ThemeRegistry.shared.removeImportedTheme(id: themeProvider.id)
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(theme.textTertiary)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(theme.statusHealthy)
-                }
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: themeProvider.cardCornerRadius)
-                    .fill(isSelected ? theme.accentPrimary.opacity(0.15) : (isHovering ? theme.hoverOverlay : Color.clear))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: themeProvider.cardCornerRadius)
-                            .stroke(isSelected ? theme.accentPrimary : theme.glassBorder.opacity(0.5), lineWidth: isSelected ? 2 : 1)
-                    )
-            )
-            .scaleEffect(isHovering ? 1.02 : 1.0)
-        }
-        .buttonStyle(.plain)
-        .onHover { isHovering = $0 }
     }
 }
 

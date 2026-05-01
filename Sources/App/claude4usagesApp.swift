@@ -86,7 +86,7 @@ struct claude4usagesApp: App {
 
     /// Current theme mode from settings
     private var currentThemeMode: ThemeMode {
-        ThemeMode(rawValue: settings.themeMode) ?? .system
+        ThemeMode(rawValue: settings.themeMode) ?? .cli
     }
 
     private func startHookServer() {

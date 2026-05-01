@@ -16,20 +16,10 @@ public final class AppSettings {
 
     // MARK: - Theme Settings
 
-    /// The current theme mode (light, dark, system, christmas)
+    /// The current theme mode (cli)
     public var themeMode: String {
         didSet {
             repository.setThemeMode(themeMode)
-            if !isInitializing {
-                userHasChosenTheme = true
-            }
-        }
-    }
-
-    /// Whether the user has explicitly chosen a theme (vs auto-enabled Christmas)
-    public var userHasChosenTheme: Bool {
-        didSet {
-            repository.setUserHasChosenTheme(userHasChosenTheme)
         }
     }
 
@@ -168,7 +158,6 @@ public final class AppSettings {
 
         // Load all values from repository
         self.themeMode = repository.themeMode()
-        self.userHasChosenTheme = repository.userHasChosenTheme()
         self.claudeApiBudgetEnabled = repository.claudeApiBudgetEnabled()
         self.claudeApiBudget = Decimal(repository.claudeApiBudget())
         self.receiveBetaUpdates = repository.receiveBetaUpdates()
@@ -192,31 +181,7 @@ public final class AppSettings {
         // Launch at login - read from SMAppService (system service, not JSON)
         self.launchAtLogin = SMAppService.mainApp.status == .enabled
 
-        applySeasonalTheme()
         self.isInitializing = false
-    }
-
-    // MARK: - Seasonal Theme
-
-    public static func isChristmasPeriod(date: Date = Date()) -> Bool {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.month, .day], from: date)
-        guard let month = components.month, let day = components.day else { return false }
-        return month == 12 && (24...26).contains(day)
-    }
-
-    private func applySeasonalTheme() {
-        let isChristmas = Self.isChristmasPeriod()
-
-        if isChristmas {
-            if !userHasChosenTheme {
-                themeMode = "christmas"
-            }
-        } else {
-            if themeMode == "christmas" && !userHasChosenTheme {
-                themeMode = "system"
-            }
-        }
     }
 
     // MARK: - Provider Settings Access

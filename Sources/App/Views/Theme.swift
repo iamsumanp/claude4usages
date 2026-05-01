@@ -5,35 +5,18 @@ import Domain
 
 /// The active theme mode for the application
 enum ThemeMode: String, CaseIterable {
-    case light
-    case dark
-    case system
     case cli
-    case christmas
 
     var displayName: String {
         switch self {
-        case .light: "Light"
-        case .dark: "Dark"
-        case .system: "System"
         case .cli: "CLI"
-        case .christmas: "Christmas"
         }
     }
 
     var icon: String {
         switch self {
-        case .light: "sun.max.fill"
-        case .dark: "moon.stars.fill"
-        case .system: "circle.lefthalf.filled"
         case .cli: "terminal.fill"
-        case .christmas: "snowflake"
         }
-    }
-
-    /// Whether this theme uses Christmas-specific colors
-    var isChristmas: Bool {
-        self == .christmas
     }
 
     /// Whether this theme uses CLI-specific colors
@@ -47,7 +30,7 @@ enum ThemeMode: String, CaseIterable {
 // MARK: - Theme Environment Keys
 
 private struct ThemeModeKey: EnvironmentKey {
-    static let defaultValue: ThemeMode = .system
+    static let defaultValue: ThemeMode = .cli
 }
 
 extension EnvironmentValues {
@@ -867,7 +850,6 @@ struct ThemeSwitcherButton: View {
                 Image(systemName: themeMode.icon)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
-                    .rotationEffect(.degrees(themeMode == .dark ? -15 : 0))
             }
             .scaleEffect(isHovering ? 1.08 : 1.0)
         }
@@ -877,13 +859,8 @@ struct ThemeSwitcherButton: View {
     }
 
     private func cycleTheme() {
-        switch themeMode {
-        case .light: themeMode = .dark
-        case .dark: themeMode = .system
-        case .system: themeMode = .cli
-        case .cli: themeMode = .christmas
-        case .christmas: themeMode = .light
-        }
+        // Only CLI theme is available
+        themeMode = .cli
     }
 }
 
@@ -895,16 +872,11 @@ struct ThemeProvider: ViewModifier {
 
     private var effectiveColorScheme: ColorScheme {
         switch themeMode {
-        case .light: .light
-        case .dark: .dark
-        case .system: systemColorScheme
         case .cli: .dark  // CLI uses dark mode base
-        case .christmas: .dark  // Christmas uses dark mode base
         }
     }
 
     func body(content: Content) -> some View {
-        content
         content
             .environment(\.colorScheme, effectiveColorScheme)
             .environment(\.themeMode, themeMode)

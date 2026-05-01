@@ -245,16 +245,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let stepMs: UInt64 = 55  // ~880ms per fade direction, ~1.76s per cycle
 
                 for _ in 0..<3 {
-                    // Fade out: 1.0 → 0.25
+                    // Fade out: 1.0 → 0.55
                     for s in 0...steps {
                         guard !Task.isCancelled else { break }
-                        button.alphaValue = CGFloat(1.0 - Double(s) / Double(steps) * 0.75)
+                        button.alphaValue = CGFloat(1.0 - Double(s) / Double(steps) * 0.45)
                         try? await Task.sleep(nanoseconds: stepMs * 1_000_000)
                     }
-                    // Fade in: 0.25 → 1.0
+                    // Fade in: 0.55 → 1.0
                     for s in 0...steps {
                         guard !Task.isCancelled else { break }
-                        button.alphaValue = CGFloat(0.25 + Double(s) / Double(steps) * 0.75)
+                        button.alphaValue = CGFloat(0.55 + Double(s) / Double(steps) * 0.45)
                         try? await Task.sleep(nanoseconds: stepMs * 1_000_000)
                     }
                 }

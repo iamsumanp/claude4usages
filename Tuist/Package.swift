@@ -28,6 +28,7 @@ let package = Package(
         .package(url: "https://github.com/Kolos65/Mockable.git", from: "0.5.0"),
         .package(url: "https://github.com/migueldeicaza/SwiftTerm.git", exact: "1.12.0"),
         .package(url: "https://github.com/awslabs/aws-sdk-swift", from: "1.6.43"),
-        .package(url: "https://github.com/steipete/SweetCookieKit.git", from: "0.3.0"),
+        // SweetCookieKit removed: all versions require Swift 6.2 toolchain (incompatible with Swift 6.1);
+        // the Kimi/Alibaba providers that depend on it will be removed in Phase 2.
     ]
 )

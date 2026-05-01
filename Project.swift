@@ -1,7 +1,7 @@
 import ProjectDescription
 
 let project = Project(
-    name: "ClaudeBar",
+    name: "claude4usages",
     options: .options(
         defaultKnownRegions: ["en"],
         developmentRegion: "en"
@@ -26,7 +26,7 @@ let project = Project(
             name: "Domain",
             destinations: .macOS,
             product: .staticFramework,
-            bundleId: "com.tddworks.claudebar.domain",
+            bundleId: "com.claude4usages.domain",
             deploymentTargets: .macOS("15.0"),
             sources: ["Sources/Domain/**"],
             dependencies: [
@@ -44,7 +44,7 @@ let project = Project(
             name: "Infrastructure",
             destinations: .macOS,
             product: .staticFramework,
-            bundleId: "com.tddworks.claudebar.infrastructure",
+            bundleId: "com.claude4usages.infrastructure",
             deploymentTargets: .macOS("15.0"),
             sources: ["Sources/Infrastructure/**"],
             dependencies: [
@@ -57,7 +57,7 @@ let project = Project(
                 .external(name: "AWSSDKIdentity"),
                 .external(name: "AWSSSO"),
                 .external(name: "AWSSSOOIDC"),
-                .external(name: "SweetCookieKit"),
+                // SweetCookieKit removed: incompatible with Swift 6.1 toolchain (requires 6.2); removed in Phase 2
             ],
             settings: .settings(
                 base: [
@@ -68,10 +68,10 @@ let project = Project(
 
         // MARK: - Main Application
         .target(
-            name: "ClaudeBar",
+            name: "claude4usages",
             destinations: .macOS,
             product: .app,
-            bundleId: "com.tddworks.claudebar",
+            bundleId: "com.claude4usages.app",
             deploymentTargets: .macOS("15.0"),
             infoPlist: .file(path: "Sources/App/Info.plist"),
             sources: ["Sources/App/**"],
@@ -106,7 +106,7 @@ let project = Project(
             name: "DomainTests",
             destinations: .macOS,
             product: .unitTests,
-            bundleId: "com.tddworks.claudebar.domain-tests",
+            bundleId: "com.claude4usages.domain-tests",
             deploymentTargets: .macOS("15.0"),
             sources: ["Tests/DomainTests/**"],
             dependencies: [
@@ -132,7 +132,7 @@ let project = Project(
             name: "InfrastructureTests",
             destinations: .macOS,
             product: .unitTests,
-            bundleId: "com.tddworks.claudebar.infrastructure-tests",
+            bundleId: "com.claude4usages.infrastructure-tests",
             deploymentTargets: .macOS("15.0"),
             sources: ["Tests/InfrastructureTests/**"],
             dependencies: [
@@ -158,7 +158,7 @@ let project = Project(
             name: "AcceptanceTests",
             destinations: .macOS,
             product: .unitTests,
-            bundleId: "com.tddworks.claudebar.acceptance-tests",
+            bundleId: "com.claude4usages.acceptance-tests",
             deploymentTargets: .macOS("15.0"),
             sources: ["Tests/AcceptanceTests/**"],
             dependencies: [
@@ -181,9 +181,9 @@ let project = Project(
     ],
     schemes: [
         .scheme(
-            name: "ClaudeBar",
+            name: "claude4usages",
             shared: true,
-            buildAction: .buildAction(targets: ["ClaudeBar"]),
+            buildAction: .buildAction(targets: ["claude4usages"]),
             testAction: .targets(
                 [
                     .testableTarget(target: .target("AcceptanceTests")),
@@ -192,9 +192,9 @@ let project = Project(
                 ],
                 configuration: .debug
             ),
-            runAction: .runAction(configuration: .debug, executable: .target("ClaudeBar")),
+            runAction: .runAction(configuration: .debug, executable: .target("claude4usages")),
             archiveAction: .archiveAction(configuration: .release),
-            profileAction: .profileAction(configuration: .release, executable: .target("ClaudeBar")),
+            profileAction: .profileAction(configuration: .release, executable: .target("claude4usages")),
             analyzeAction: .analyzeAction(configuration: .debug)
         ),
     ]

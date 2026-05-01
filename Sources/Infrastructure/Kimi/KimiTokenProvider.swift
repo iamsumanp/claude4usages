@@ -1,5 +1,4 @@
 import Foundation
-import SweetCookieKit
 import Domain
 
 /// Protocol for resolving Kimi authentication tokens.
@@ -13,6 +12,9 @@ public protocol KimiTokenProviding: Sendable {
 /// Resolution order:
 /// 1. `KIMI_AUTH_TOKEN` environment variable
 /// 2. `kimi-auth` cookie from browser cookie stores (via SweetCookieKit)
+///
+/// NOTE (Phase 1): SweetCookieKit removed from deps (Swift 6.2 required; Phase 2 removes this provider).
+/// Browser cookie resolution falls through to authenticationRequired.
 public struct KimiCookieTokenProvider: KimiTokenProviding {
     public init() {}
 
@@ -25,39 +27,8 @@ public struct KimiCookieTokenProvider: KimiTokenProviding {
             return envToken
         }
 
-        // 2. Try extracting from browser cookies
-        if let browserToken = fetchFromBrowser() {
-            AppLog.probes.debug("Kimi: Using token from browser cookie")
-            return browserToken
-        }
-
+        // 2. Browser cookie extraction stubbed (SweetCookieKit removed in Phase 1)
         AppLog.probes.error("Kimi: No authentication token found")
         throw ProbeError.authenticationRequired
-    }
-
-    private func fetchFromBrowser() -> String? {
-        let cookieClient = BrowserCookieClient()
-        let query = BrowserCookieQuery(
-            domains: ["www.kimi.com", "kimi.com"],
-            domainMatch: .suffix,
-            includeExpired: false
-        )
-
-        for browser in Browser.defaultImportOrder {
-            do {
-                let stores = try cookieClient.records(matching: query, in: browser)
-                for store in stores {
-                    let cookies = store.cookies(origin: query.origin)
-                    if let auth = cookies.first(where: { $0.name == "kimi-auth" }),
-                       !auth.value.isEmpty
-                    {
-                        return auth.value
-                    }
-                }
-            } catch {
-                continue
-            }
-        }
-        return nil
     }
 }

@@ -645,34 +645,6 @@ struct MenuContentView: View {
 
             Spacer()
 
-            // Share Button (Claude only) - icon only
-            if let claudeProvider = selectedProvider as? ClaudeProvider,
-               claudeProvider.supportsGuestPasses {
-                let isFetchingPasses = claudeProvider.isFetchingPasses
-                Button {
-                    Task { await fetchAndShowPasses() }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(theme.shareGradient)
-                            .frame(width: 32, height: 32)
-
-                        if isFetchingPasses {
-                            ProgressView()
-                                .scaleEffect(0.5)
-                                .tint(.white)
-                        } else {
-                            Image(systemName: "gift.fill")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-                .help("Share Claude Code")
-                .keyboardShortcut("s")
-            }
-
             // Settings Button with update indicator
             Button {
                 // Avoid window resize animation glitches in MenuBarExtra.

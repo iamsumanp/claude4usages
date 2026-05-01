@@ -22,6 +22,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Token used to cancel + re-register observation tracking when re-rendering the icon
     private var iconRedrawToken: UInt = 0
 
+    // Sticky active-session state for the menu bar icon.
+    // Turns green on SessionStart, stays green until 5 minutes of inactivity.
+    private var sessionActiveTimer: Timer?
+    private var isIconSessionActive: Bool = false {
+        didSet {
+            guard isIconSessionActive != oldValue else { return }
+            if let button = statusItem?.button {
+                button.image = nil
+                button.image = renderIconWithActive(isIconSessionActive)
+                button.needsDisplay = true
+            }
+        }
+    }
+    private static let sessionActiveTimeoutSeconds: TimeInterval = 300
+
     override init() {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
@@ -164,17 +179,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func renderIcon() -> NSImage {
+        renderIconWithActive(isIconSessionActive)
+    }
+
+    private func renderIconWithActive(_ active: Bool) -> NSImage {
         let renderer = MenuBarIconRenderer(settings: rendererSettings)
         let iconData = makeIconUsageData(from: monitor.selectedProvider?.snapshot)
-        let image = renderer.createIcon(
+        return renderer.createIcon(
             usageData: iconData,
             hasUpdate: false,
-            isSessionActive: sessionMonitor.activeSession != nil,
+            isSessionActive: active,
             button: statusItem?.button
         )
-        // Don't override .size — the renderer already produces an 18pt-tall image
-        // and the status bar will scale to fit. Forcing height stretches the bitmap.
-        return image
     }
 
     private var rendererSettings: MenuBarIconRendererSettings {
@@ -197,14 +213,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 AppLog.hooks.info("Hook server started, listening for events")
                 for await event in events {
                     sessionMonitor.processEvent(event)
-                    let isActive = sessionMonitor.activeSession != nil
-                    if let button = statusItem?.button {
-                        // Nil-reset forces macOS to clear the cached bitmap and redraw.
-                        button.image = nil
-                        button.image = renderIcon()
-                        button.needsDisplay = true
-                        AppLog.hooks.info("Icon updated after \(event.eventName.rawValue): isActive=\(isActive)")
-                    }
+                    handleSessionEventForIcon(event)
                     sendSessionNotification(for: event)
                 }
             } catch {
@@ -217,6 +226,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hookServerTask?.cancel()
         hookServerTask = nil
         hookServer.stop()
+    }
+
+    // MARK: - Sticky session icon
+
+    /// Any SessionStart (or subagent activity) arms or resets the 5-minute idle timer.
+    /// The icon stays green until 5 minutes pass with no new activity — so it remains
+    /// green through an entire conversation, not just per-request.
+    private func handleSessionEventForIcon(_ event: SessionEvent) {
+        switch event.eventName {
+        case .sessionStart, .subagentStart, .stop, .taskCompleted:
+            isIconSessionActive = true
+            sessionActiveTimer?.invalidate()
+            sessionActiveTimer = Timer.scheduledTimer(
+                withTimeInterval: AppDelegate.sessionActiveTimeoutSeconds,
+                repeats: false
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.isIconSessionActive = false
+                }
+            }
+        case .sessionEnd:
+            // SessionEnd fires per-request, not per-process. Don't clear immediately;
+            // let the idle timer decide when the session is truly over.
+            break
+        default:
+            break
+        }
     }
 
     // MARK: - Session Notifications

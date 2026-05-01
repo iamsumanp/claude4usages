@@ -3,7 +3,7 @@ import AppKit
 import Domain
 import Infrastructure
 
-/// SwiftUI wrapper that renders the Usage4Claude shape icons via MenuBarIconRenderer.
+/// SwiftUI wrapper that renders the menu bar shape icons via MenuBarIconRenderer.
 @MainActor
 struct MenuBarIconView: View {
     let snapshot: UsageSnapshot?

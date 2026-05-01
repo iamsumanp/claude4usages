@@ -3,7 +3,7 @@
 //  claude4usages
 //
 //  Created by Claude on 2025-11-26.
-//  Copyright © 2025 f-is-h. All rights reserved.
+//  Copyright © 2026 Suman Pokharel. All rights reserved.
 //
 
 import AppKit

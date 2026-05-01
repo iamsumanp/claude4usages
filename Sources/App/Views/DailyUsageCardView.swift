@@ -186,23 +186,32 @@ struct DailyUsageCardView: View {
         }
 
         let arrow: String
-        let comparator: String
+        let directionWord: String
         if !hasChange {
             arrow = "equal"
-            comparator = "same as"
+            directionWord = "same"
         } else if isUp {
             arrow = "arrow.up"
-            comparator = "more than"
+            directionWord = "more"
         } else {
             arrow = "arrow.down"
-            comparator = "less than"
+            directionWord = "less"
         }
 
-        let headline = hasChange ? "\(delta) \(comparator) \(date)" : "Same as \(date)"
+        // Keep headline short so it never truncates on narrow cards.
+        // e.g. "↑ $469.52 more"
+        let headline = hasChange ? "\(delta) \(directionWord)" : "Same as \(date)"
+
+        // Subline carries the date context and percentage.
+        // e.g. "vs Apr 30  ·  +470%"
         let subline: String
-        if let pct, hasChange {
-            let sign = isUp ? "+" : "−"
-            subline = "\(sign)\(String(format: "%.0f", abs(pct)))% from yesterday"
+        if hasChange {
+            if let pct {
+                let sign = isUp ? "+" : "−"
+                subline = "vs \(date)  ·  \(sign)\(String(format: "%.0f", abs(pct)))%"
+            } else {
+                subline = "vs \(date)"
+            }
         } else {
             subline = ""
         }

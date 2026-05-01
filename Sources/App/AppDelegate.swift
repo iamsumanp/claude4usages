@@ -197,6 +197,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 AppLog.hooks.info("Hook server started, listening for events")
                 for await event in events {
                     sessionMonitor.processEvent(event)
+                    // Explicitly refresh the status-bar icon after every hook event
+                    // rather than relying solely on withObservationTracking, which
+                    // can miss the update if onChange fires on a different executor.
+                    if let button = statusItem?.button {
+                        button.image = renderIcon()
+                    }
                     sendSessionNotification(for: event)
                 }
             } catch {

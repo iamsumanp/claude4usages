@@ -1,8 +1,6 @@
 import Foundation
-import Mockable
 
 /// Resolves account identity from external sources (e.g., config files).
-@Mockable
 public protocol AccountInfoResolving: Sendable {
     func resolve() -> AccountInfo?
 }

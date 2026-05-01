@@ -1,9 +1,7 @@
 import Foundation
-import Mockable
 
 /// Protocol for JSON-RPC transport - abstracts the stdin/stdout communication.
 /// Enables testing of RPC clients without spawning real processes.
-@Mockable
 public protocol RPCTransport: Sendable {
     /// Sends a JSON-RPC message.
     func send(_ data: Data) throws

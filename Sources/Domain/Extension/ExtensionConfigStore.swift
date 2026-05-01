@@ -1,9 +1,7 @@
 import Foundation
-import Mockable
 
 /// Reads and writes extension config values.
 /// Non-secret values are persisted in settings JSON, secrets in UserDefaults.
-@Mockable
 public protocol ExtensionConfigRepository: Sendable {
     /// Reads a non-secret config value.
     func value(forFieldId fieldId: String, extensionId: String) -> String?

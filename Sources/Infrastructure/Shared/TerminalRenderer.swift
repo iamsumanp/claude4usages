@@ -1,84 +1,43 @@
 import Foundation
-import SwiftTerm
 
-/// Minimal delegate for headless terminal rendering.
-/// Only implements required methods - we don't need to send data back.
-private final class RenderDelegate: TerminalDelegate {
-    func send(source: Terminal, data: ArraySlice<UInt8>) {
-        // No-op: we're only reading, not sending
-    }
-}
-
-/// Renders raw terminal output with ANSI escape sequences into clean text.
+/// Strips ANSI escape sequences from terminal output.
 ///
-/// Uses SwiftTerm's terminal emulator to properly handle cursor movements,
-/// screen clearing, and other terminal control sequences that would otherwise
-/// corrupt the output when captured from a PTY.
-///
-/// Example:
-/// ```swift
-/// let renderer = TerminalRenderer()
-/// let raw = "Hello\u{1B}[5CWorld"  // "Hello" + move 5 right + "World"
-/// let clean = renderer.render(raw)  // "Hello     World"
-/// ```
+/// This is a simplified replacement for the SwiftTerm-based renderer.
+/// It strips common escape sequences rather than fully emulating a terminal.
+/// Sufficient for parsing `claude /usage` output which uses basic color codes.
 public final class TerminalRenderer {
-    private let cols: Int
-    private let rows: Int
+    public init(cols: Int = 160, rows: Int = 50) {}
 
-    /// Creates a terminal renderer with the specified dimensions.
-    /// - Parameters:
-    ///   - cols: Number of columns (default: 160)
-    ///   - rows: Number of rows (default: 50)
-    public init(cols: Int = 160, rows: Int = 50) {
-        self.cols = cols
-        self.rows = rows
-    }
-
-    /// Renders raw terminal output into clean text.
+    /// Strips ANSI escape sequences from raw terminal output.
     ///
     /// - Parameter raw: Raw terminal output containing ANSI escape sequences
-    /// - Returns: Clean rendered text as it would appear in a terminal
+    /// - Returns: Text with escape sequences removed
     public func render(_ raw: String) -> String {
-        let delegate = RenderDelegate()
-        // Enable convertEol to handle \n as \r\n (newline + carriage return)
-        let options = TerminalOptions(cols: cols, rows: rows, convertEol: true)
-        let terminal = Terminal(delegate: delegate, options: options)
+        // Strip ESC[ ... m  (SGR color/style codes)
+        // Strip ESC[ ... H/J/K  (cursor movement and clear codes)
+        // Strip ESC[ ... A/B/C/D  (cursor directional movement)
+        // Strip ESC(B and similar single-char commands
+        var result = raw
 
-        // Feed the raw output to the terminal emulator
-        terminal.feed(text: raw)
-
-        // Extract the rendered screen content
-        return extractScreenText(from: terminal)
-    }
-
-    /// Extracts text content from the terminal buffer.
-    private func extractScreenText(from terminal: Terminal) -> String {
-        var lines: [String] = []
-
-        // Iterate through all lines in the terminal buffer
-        for row in 0..<rows {
-            guard let line = terminal.getLine(row: row) else {
-                lines.append("")
-                continue
-            }
-
-            var lineText = ""
-            for col in 0..<cols {
-                let charData = line[col]
-                let char = charData.getCharacter()
-                // Replace null character (empty cell) with space
-                lineText.append(char == "\0" ? " " : char)
-            }
-
-            // Trim trailing spaces from each line
-            lines.append(lineText.trimmingCharacters(in: CharacterSet(charactersIn: " \t\0")))
+        // Remove ESC followed by [ and parameters up to a final letter
+        // Pattern: \x1B [ params letter
+        if let regex = try? NSRegularExpression(pattern: "\u{1B}\\[[0-9;]*[A-Za-z]") {
+            let range = NSRange(result.startIndex..., in: result)
+            result = regex.stringByReplacingMatches(in: result, range: range, withTemplate: "")
         }
 
-        // Join lines and trim trailing empty lines
-        return lines
-            .reversed()
-            .drop(while: { $0.isEmpty })
-            .reversed()
-            .joined(separator: "\n")
+        // Remove remaining standalone ESC sequences (e.g. ESC(B, ESC=)
+        if let regex = try? NSRegularExpression(pattern: "\u{1B}[^\\[\\r\\n]") {
+            let range = NSRange(result.startIndex..., in: result)
+            result = regex.stringByReplacingMatches(in: result, range: range, withTemplate: "")
+        }
+
+        // Remove bare ESC characters
+        result = result.replacingOccurrences(of: "\u{1B}", with: "")
+
+        // Remove carriage returns
+        result = result.replacingOccurrences(of: "\r", with: "")
+
+        return result
     }
 }

@@ -53,11 +53,9 @@ public extension AIProvider {
     var statusPageURL: URL? { nil }
 }
 
-import Mockable
 
 /// Protocol defining how to probe for usage data.
 /// This is an internal implementation detail - callers use AIProvider.refresh() instead.
-@Mockable
 public protocol UsageProbe: Sendable {
     /// Fetches the current usage snapshot
     func probe() async throws -> UsageSnapshot

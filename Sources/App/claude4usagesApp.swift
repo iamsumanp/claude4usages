@@ -1,9 +1,6 @@
 import SwiftUI
 import Domain
 import Infrastructure
-#if ENABLE_SPARKLE
-import Sparkle
-#endif
 
 extension Notification.Name {
     static let hookSettingsChanged = Notification.Name("com.claude4usages.hookSettingsChanged")
@@ -30,11 +27,6 @@ struct claude4usagesApp: App {
     /// Sends session start/end notifications
     private let sessionAlertSender = SystemAlertSender()
 
-    #if ENABLE_SPARKLE
-    /// Sparkle updater for auto-updates
-    @State private var sparkleUpdater = SparkleUpdater()
-    #endif
-
     init() {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
@@ -57,46 +49,6 @@ struct claude4usagesApp: App {
                 passProbe: ClaudePassProbe(),
                 settingsRepository: settingsRepository,
                 dailyUsageAnalyzer: ClaudeDailyUsageAnalyzer()
-            ),
-            CodexProvider(
-                rpcProbe: CodexUsageProbe(),
-                apiProbe: CodexAPIUsageProbe(),
-                settingsRepository: settingsRepository
-            ),
-            GeminiProvider(probe: GeminiUsageProbe(), settingsRepository: settingsRepository),
-            AntigravityProvider(probe: AntigravityUsageProbe(), settingsRepository: settingsRepository),
-            ZaiProvider(
-                probe: ZaiUsageProbe(settingsRepository: settingsRepository),
-                settingsRepository: settingsRepository
-            ),
-            CopilotProvider(
-                billingProbe: CopilotUsageProbe(settingsRepository: settingsRepository),
-                internalProbe: CopilotInternalAPIProbe(settingsRepository: settingsRepository),
-                settingsRepository: settingsRepository
-            ),
-            BedrockProvider(
-                probe: BedrockUsageProbe(settingsRepository: settingsRepository),
-                settingsRepository: settingsRepository
-            ),
-            AmpCodeProvider(probe: AmpCodeUsageProbe(), settingsRepository: settingsRepository),
-            KimiProvider(
-                cliProbe: KimiCLIUsageProbe(),
-                apiProbe: KimiUsageProbe(),
-                settingsRepository: settingsRepository
-            ),
-            KiroProvider(probe: KiroUsageProbe(), settingsRepository: settingsRepository),
-            CursorProvider(probe: CursorUsageProbe(), settingsRepository: settingsRepository),
-            MiniMaxProvider(
-                probe: MiniMaxUsageProbe(settingsRepository: settingsRepository),
-                settingsRepository: settingsRepository
-            ),
-            AlibabaProvider(
-                probe: AlibabaUsageProbe(settingsRepository: settingsRepository, cookieProvider: AlibabaBrowserCookieProvider()),
-                settingsRepository: settingsRepository
-            ),
-            MistralProvider(
-                probe: MistralUsageProbe(),
-                settingsRepository: settingsRepository
             ),
         ])
         AppLog.providers.info("Created \(repository.all.count) providers")
@@ -204,18 +156,10 @@ struct claude4usagesApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            #if ENABLE_SPARKLE
             MenuContentView(monitor: monitor, sessionMonitor: sessionMonitor, quotaAlerter: quotaAlerter) { enabled in
                     if enabled { startHookServer() } else { stopHookServer() }
                 }
                 .appThemeProvider(themeModeId: settings.themeMode)
-                .environment(\.sparkleUpdater, sparkleUpdater)
-            #else
-            MenuContentView(monitor: monitor, sessionMonitor: sessionMonitor, quotaAlerter: quotaAlerter) { enabled in
-                    if enabled { startHookServer() } else { stopHookServer() }
-                }
-                .appThemeProvider(themeModeId: settings.themeMode)
-            #endif
         } label: {
             // Show overall status + active session indicator in menu bar
             StatusBarIcon(status: effectiveSelectedProviderStatus, activeSession: sessionMonitor.activeSession)
@@ -278,49 +222,3 @@ struct StatusBarIcon: View {
     }
 }
 
-// MARK: - StatusBarIcon Preview
-
-#Preview("StatusBarIcon - All States") {
-    HStack(spacing: 30) {
-        VStack {
-            StatusBarIcon(status: .healthy)
-            Text("HEALTHY")
-                .font(.caption)
-                .foregroundStyle(.green)
-        }
-        VStack {
-            StatusBarIcon(status: .warning)
-            Text("WARNING")
-                .font(.caption)
-                .foregroundStyle(.orange)
-        }
-        VStack {
-            StatusBarIcon(status: .critical)
-            Text("CRITICAL")
-                .font(.caption)
-                .foregroundStyle(.red)
-        }
-        VStack {
-            StatusBarIcon(status: .depleted)
-            Text("DEPLETED")
-                .font(.caption)
-                .foregroundStyle(.red)
-        }
-        VStack {
-            StatusBarIcon(status: .healthy)
-                .appThemeProvider(themeModeId: "cli")
-            Text("CLI")
-                .font(.caption)
-                .foregroundStyle(CLITheme().accentPrimary)
-        }
-        VStack {
-            StatusBarIcon(status: .healthy)
-                .appThemeProvider(themeModeId: "christmas")
-            Text("CHRISTMAS")
-                .font(.caption)
-                .foregroundStyle(ChristmasTheme().accentPrimary)
-        }
-    }
-    .padding(40)
-    .background(Color.black)
-}

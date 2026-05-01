@@ -1,9 +1,6 @@
 import SwiftUI
 import Domain
 import Infrastructure
-#if ENABLE_SPARKLE
-import Sparkle
-#endif
 
 /// Inline settings content view that fits within the menu bar popup.
 struct SettingsContentView: View {
@@ -12,12 +9,7 @@ struct SettingsContentView: View {
     @Environment(\.appTheme) private var theme
     @State private var settings = AppSettings.shared
 
-    #if ENABLE_SPARKLE
-    @Environment(\.sparkleUpdater) private var sparkleUpdater
-    #endif
-
     @State private var providersExpanded: Bool = false
-    @State private var updatesExpanded: Bool = false
     @State private var backgroundSyncExpanded: Bool = false
 
     // Hook settings state
@@ -26,47 +18,8 @@ struct SettingsContentView: View {
     @State private var hooksInstalled: Bool = false
     @State private var hookError: String?
 
-    private enum ProviderID {
-        static let claude = "claude"
-        static let codex = "codex"
-        static let copilot = "copilot"
-        static let zai = "zai"
-        static let bedrock = "bedrock"
-        static let kimi = "kimi"
-        static let minimax = "minimax"
-        static let alibaba = "alibaba"
-    }
-
-    private var isCopilotEnabled: Bool {
-        monitor.provider(for: ProviderID.copilot)?.isEnabled ?? false
-    }
-
-    private var isZaiEnabled: Bool {
-        monitor.provider(for: ProviderID.zai)?.isEnabled ?? false
-    }
-
     private var isClaudeEnabled: Bool {
-        monitor.provider(for: ProviderID.claude)?.isEnabled ?? false
-    }
-
-    private var isCodexEnabled: Bool {
-        monitor.provider(for: ProviderID.codex)?.isEnabled ?? false
-    }
-
-    private var isKimiEnabled: Bool {
-        monitor.provider(for: ProviderID.kimi)?.isEnabled ?? false
-    }
-
-    private var isMiniMaxEnabled: Bool {
-        monitor.provider(for: ProviderID.minimax)?.isEnabled ?? false
-    }
-
-    private var isBedrockEnabled: Bool {
-        monitor.provider(for: ProviderID.bedrock)?.isEnabled ?? false
-    }
-
-    private var isAlibabaEnabled: Bool {
-        monitor.provider(for: ProviderID.alibaba)?.isEnabled ?? false
+        monitor.provider(for: "claude")?.isEnabled ?? false
     }
 
     /// Extension providers that are enabled and have config fields declared in their manifest.
@@ -104,34 +57,6 @@ struct SettingsContentView: View {
                         ClaudeConfigCard(monitor: monitor)
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
-                    if isCodexEnabled {
-                        CodexConfigCard(monitor: monitor)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                    if isKimiEnabled {
-                        KimiConfigCard(monitor: monitor)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                    if isMiniMaxEnabled {
-                        MiniMaxConfigCard(monitor: monitor)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                    if isAlibabaEnabled {
-                        AlibabaConfigCard(monitor: monitor)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                    if isCopilotEnabled {
-                        CopilotConfigCard(monitor: monitor)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                    if isZaiEnabled {
-                        ZaiConfigCard(monitor: monitor)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                    if isBedrockEnabled {
-                        BedrockConfigCard(monitor: monitor)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
                     ForEach(enabledExtensionProvidersWithConfig, id: \.id) { extProvider in
                         ExtensionConfigCard(
                             provider: extProvider,
@@ -143,9 +68,6 @@ struct SettingsContentView: View {
                     burnRateCard
                     hooksCard
                     launchAtLoginCard
-                    #if ENABLE_SPARKLE
-                    updatesCard
-                    #endif
                     logsCard
                     aboutCard
                 }
@@ -490,172 +412,6 @@ struct SettingsContentView: View {
                 .frame(width: 60, height: 1)
         }
     }
-
-    // MARK: - Updates Card
-
-#if ENABLE_SPARKLE
-    private var updatesCard: some View {
-        DisclosureGroup(isExpanded: $updatesExpanded) {
-            VStack(alignment: .leading, spacing: 12) {
-                if sparkleUpdater?.isAvailable == true {
-                    Button {
-                        sparkleUpdater?.checkForUpdates()
-                    } label: {
-                        HStack(spacing: 6) {
-                            if sparkleUpdater?.isCheckingForUpdates == true {
-                                ProgressView()
-                                    .scaleEffect(0.6)
-                                    .frame(width: 14, height: 14)
-                            } else {
-                                Image(systemName: "arrow.clockwise")
-                                    .font(.system(size: 11, weight: .semibold))
-                            }
-
-                            Text(sparkleUpdater?.isCheckingForUpdates == true ? "Checking..." : "Check for Updates")
-                                .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            Capsule()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(red: 0.3, green: 0.7, blue: 0.4),
-                                            Color(red: 0.2, green: 0.55, blue: 0.35)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(sparkleUpdater?.canCheckForUpdates != true || sparkleUpdater?.isCheckingForUpdates == true)
-                    .opacity(sparkleUpdater?.canCheckForUpdates == true ? 1 : 0.6)
-
-                    if let lastCheck = sparkleUpdater?.lastUpdateCheckDate {
-                        HStack(spacing: 4) {
-                            Image(systemName: "clock.fill")
-                                .font(.system(size: 8))
-
-                            Text("Last checked: \(lastCheck.formatted(date: .abbreviated, time: .shortened))")
-                                .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
-                        }
-                        .foregroundStyle(theme.textTertiary)
-                    }
-
-                    HStack {
-                        Text("Check automatically")
-                            .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
-                            .foregroundStyle(theme.textPrimary)
-
-                        Spacer()
-
-                        Toggle("", isOn: Binding(
-                            get: { sparkleUpdater?.automaticallyChecksForUpdates ?? true },
-                            set: { sparkleUpdater?.automaticallyChecksForUpdates = $0 }
-                        ))
-                        .toggleStyle(.switch)
-                        .tint(theme.accentPrimary)
-                        .scaleEffect(0.8)
-                        .labelsHidden()
-                    }
-
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Include beta versions")
-                                .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
-                                .foregroundStyle(theme.textPrimary)
-
-                            Text("Get early access to new features")
-                                .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
-                                .foregroundStyle(theme.textTertiary)
-                        }
-
-                        Spacer()
-
-                        Toggle("", isOn: $settings.receiveBetaUpdates)
-                            .toggleStyle(.switch)
-                            .tint(theme.accentPrimary)
-                            .scaleEffect(0.8)
-                            .labelsHidden()
-                    }
-                } else {
-                    HStack(spacing: 6) {
-                        Image(systemName: "hammer.fill")
-                            .font(.system(size: 10))
-                        Text("Updates unavailable in debug builds")
-                            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
-                    }
-                    .foregroundStyle(theme.textTertiary)
-                }
-            }
-        } label: {
-            updatesHeader
-                .contentShape(.rect)
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        updatesExpanded.toggle()
-                    }
-                }
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(theme.cardGradient)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(
-                            LinearGradient(
-                                colors: [theme.glassBorder, theme.glassBorder.opacity(0.5)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                )
-        )
-    }
-
-    private var updatesHeader: some View {
-        HStack(spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.3, green: 0.7, blue: 0.4),
-                                Color(red: 0.2, green: 0.55, blue: 0.35)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 32, height: 32)
-
-                Image(systemName: "arrow.down.circle.fill")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Updates")
-                    .font(.system(size: 14, weight: .bold, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-
-                Text("Version \(appVersion)")
-                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-
-            Spacer()
-        }
-    }
-
-    #endif
 
     // MARK: - App Info
 
@@ -1304,22 +1060,3 @@ struct DisplayModeButton: View {
     }
 }
 
-// MARK: - Preview
-
-#Preview("Settings - Dark") {
-    ZStack {
-        DarkTheme().backgroundGradient
-        SettingsContentView(showSettings: .constant(true), monitor: QuotaMonitor(providers: AIProviders(providers: [])))
-    }
-    .appThemeProvider(themeModeId: "dark")
-    .frame(width: 380, height: 420)
-}
-
-#Preview("Settings - Light") {
-    ZStack {
-        LightTheme().backgroundGradient
-        SettingsContentView(showSettings: .constant(true), monitor: QuotaMonitor(providers: AIProviders(providers: [])))
-    }
-    .appThemeProvider(themeModeId: "light")
-    .frame(width: 380, height: 420)
-}

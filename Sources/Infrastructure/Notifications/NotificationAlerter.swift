@@ -1,11 +1,9 @@
 import Foundation
 import Domain
-import Mockable
 
 // MARK: - Internal Protocol (for testability)
 
 /// Internal protocol for sending system alerts. Enables testing without UNUserNotificationCenter.
-@Mockable
 protocol AlertSender: Sendable {
     func requestPermission() async -> Bool
     func send(title: String, body: String, categoryIdentifier: String) async throws

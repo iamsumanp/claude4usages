@@ -1,9 +1,7 @@
 import Foundation
-import Mockable
 
 /// Repository protocol for AI providers.
 /// Defines the interface for managing a collection of providers.
-@Mockable
 public protocol AIProviderRepository: AnyObject, Sendable {
     /// All registered providers
     var all: [any AIProvider] { get }

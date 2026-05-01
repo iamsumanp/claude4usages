@@ -2,7 +2,7 @@
 .DS_Store
 Package.resolved
 
-# Tuist generated (regenerate with: tuist generate)
+# Tuist generated (now removed, kept for reference)
 *.xcodeproj
 *.xcworkspace
 Derived/
@@ -13,3 +13,8 @@ xcuserdata/
 # Build artifacts
 build/
 .serena/
+
+# SwiftPM
+.swiftpm/
+dist/
+*.dmg

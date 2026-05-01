@@ -202,7 +202,6 @@ public final class ClaudeProvider: AIProvider, @unchecked Sendable {
             loginMethod: snapshot.loginMethod,
             accountTier: snapshot.accountTier,
             costUsage: snapshot.costUsage,
-            bedrockUsage: snapshot.bedrockUsage,
             dailyUsageReport: report
         )
     }

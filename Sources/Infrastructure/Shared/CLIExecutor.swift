@@ -1,5 +1,4 @@
 import Foundation
-import Mockable
 
 /// Result of executing a CLI command.
 public struct CLIResult: Sendable, Equatable {
@@ -14,7 +13,6 @@ public struct CLIResult: Sendable, Equatable {
 
 /// Protocol for executing CLI commands.
 /// From user's mental model: "Is this tool available?" and "Run it and get my stats"
-@Mockable
 public protocol CLIExecutor: Sendable {
     /// Finds a tool on the system. Returns the path if found, nil otherwise.
     func locate(_ binary: String) -> String?

@@ -1,9 +1,7 @@
 import Foundation
-import Mockable
 
 /// Domain protocol for alerting users about quota changes.
 /// Implementations decide how to alert (notifications, sounds, etc.).
-@Mockable
 public protocol QuotaAlerter: Sendable {
     /// Requests permission to send alerts to the user.
     /// Returns true if permission was granted.

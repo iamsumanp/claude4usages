@@ -155,18 +155,3 @@ struct SharePassOverlay: View {
     }
 }
 
-// MARK: - Preview
-
-#Preview("SharePassOverlay") {
-    ZStack {
-        DarkTheme().backgroundGradient
-
-        SharePassOverlay(
-            pass: ClaudePass(
-                referralURL: URL(string: "https://claude.ai/referral/DJ_kWX90Xw")!
-            ),
-            onDismiss: {}
-        )
-    }
-    .frame(width: 380, height: 400)
-}

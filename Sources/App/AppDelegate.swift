@@ -22,9 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Token used to cancel + re-register observation tracking when re-rendering the icon
     private var iconRedrawToken: UInt = 0
 
-    // Sticky active-session state for the menu bar icon.
-    // Turns green on SessionStart, stays green until 5 minutes of inactivity.
-    private var sessionActiveTimer: Timer?
+    // Process-based active state: green exactly while `claude` is in the OS process list.
+    private var processPollingTask: Task<Void, Never>?
     private var isIconSessionActive: Bool = false {
         didSet {
             guard isIconSessionActive != oldValue else { return }
@@ -35,7 +34,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
     }
-    private static let sessionActiveTimeoutSeconds: TimeInterval = 300
 
     override init() {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
@@ -113,6 +111,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Reactive icon updates — re-render whenever monitor / sessionMonitor / settings change
         scheduleIconRedraw()
+
+        // Poll pgrep every 3s — icon is green exactly as long as `claude` is in process list
+        startProcessPolling()
     }
 
     // MARK: - Status Item Setup
@@ -228,31 +229,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hookServer.stop()
     }
 
-    // MARK: - Sticky session icon
+    // MARK: - Process-based active detection
 
-    /// Any SessionStart (or subagent activity) arms or resets the 5-minute idle timer.
-    /// The icon stays green until 5 minutes pass with no new activity — so it remains
-    /// green through an entire conversation, not just per-request.
-    private func handleSessionEventForIcon(_ event: SessionEvent) {
-        switch event.eventName {
-        case .sessionStart, .subagentStart, .stop, .taskCompleted:
-            isIconSessionActive = true
-            sessionActiveTimer?.invalidate()
-            sessionActiveTimer = Timer.scheduledTimer(
-                withTimeInterval: AppDelegate.sessionActiveTimeoutSeconds,
-                repeats: false
-            ) { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    self?.isIconSessionActive = false
+    /// Polls `pgrep -x claude` every 3 seconds.
+    /// Icon is green exactly as long as the `claude` process exists in the OS process list.
+    func startProcessPolling() {
+        processPollingTask?.cancel()
+        processPollingTask = Task { @MainActor in
+            while !Task.isCancelled {
+                let active = isClaudeProcessRunning()
+                if active != isIconSessionActive {
+                    isIconSessionActive = active
                 }
+                try? await Task.sleep(for: .seconds(3))
             }
-        case .sessionEnd:
-            // SessionEnd fires per-request, not per-process. Don't clear immediately;
-            // let the idle timer decide when the session is truly over.
-            break
-        default:
-            break
         }
+    }
+
+    private func isClaudeProcessRunning() -> Bool {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+        process.arguments = ["-x", "claude"]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try? process.run()
+        process.waitUntilExit()
+        return process.terminationStatus == 0
+    }
+
+    private func handleSessionEventForIcon(_ event: SessionEvent) {
+        // Process polling drives the icon — no action needed per-event.
+        // Kept for potential future use (e.g. per-event notifications).
+        _ = event
     }
 
     // MARK: - Session Notifications

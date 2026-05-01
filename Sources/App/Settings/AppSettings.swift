@@ -147,6 +147,29 @@ public final class AppSettings {
         }
     }
 
+    // MARK: - Completion Feedback Settings
+
+    /// Whether the menu bar icon pulses green when Claude finishes a message
+    public var completionPulseEnabled: Bool {
+        didSet {
+            repository.setCompletionPulseEnabled(completionPulseEnabled)
+        }
+    }
+
+    /// Whether to play a sound when Claude finishes a message
+    public var completionSoundEnabled: Bool {
+        didSet {
+            repository.setCompletionSoundEnabled(completionSoundEnabled)
+        }
+    }
+
+    /// Name of the macOS system sound to play (e.g. "Pop", "Glass", "Purr", "Bottle")
+    public var completionSoundName: String {
+        didSet {
+            repository.setCompletionSoundName(completionSoundName)
+        }
+    }
+
     // MARK: - Internal
 
     private var isInitializing = true
@@ -177,6 +200,10 @@ public final class AppSettings {
         self.menuBarIconDisplayMode = repository.menuBarIconDisplayMode()
         self.menuBarIconStyleMode = repository.menuBarIconStyleMode()
         self.menuBarIconActiveTypes = repository.menuBarIconActiveTypes()
+
+        self.completionPulseEnabled = repository.completionPulseEnabled()
+        self.completionSoundEnabled = repository.completionSoundEnabled()
+        self.completionSoundName = repository.completionSoundName()
 
         // Launch at login - read from SMAppService (system service, not JSON)
         self.launchAtLogin = SMAppService.mainApp.status == .enabled

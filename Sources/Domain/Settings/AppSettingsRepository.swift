@@ -66,4 +66,15 @@ public protocol AppSettingsRepository: Sendable {
 
     func menuBarIconActiveTypes() -> [String]
     func setMenuBarIconActiveTypes(_ types: [String])
+
+    // MARK: - Completion Feedback (pulse + sound when Claude finishes a message)
+
+    func completionPulseEnabled() -> Bool
+    func setCompletionPulseEnabled(_ enabled: Bool)
+
+    func completionSoundEnabled() -> Bool
+    func setCompletionSoundEnabled(_ enabled: Bool)
+
+    func completionSoundName() -> String
+    func setCompletionSoundName(_ name: String)
 }

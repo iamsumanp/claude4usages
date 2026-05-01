@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import Domain
 import Infrastructure
@@ -50,6 +51,7 @@ struct SettingsContentView: View {
                 VStack(spacing: 12) {
                     displayModeCard
                     menuBarIconCard
+                    completionFeedbackCard
 
                     if isClaudeEnabled {
                         ClaudeConfigCard(monitor: monitor)
@@ -270,6 +272,99 @@ struct SettingsContentView: View {
             .tint(theme.accentPrimary)
             .scaleEffect(0.8)
             .labelsHidden()
+        }
+        .padding(.vertical, 2)
+    }
+
+    // MARK: - Completion Feedback Card
+
+    private static let completionSoundChoices: [(label: String, name: String)] = [
+        ("Pop", "Pop"),
+        ("Purr", "Purr"),
+        ("Submarine", "Submarine"),
+        ("Bottle", "Bottle"),
+        ("Frog", "Frog"),
+    ]
+
+    private var completionFeedbackCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(theme.accentGradient)
+                        .frame(width: 32, height: 32)
+
+                    Image(systemName: "bell.badge")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(theme.id == "cli" ? theme.textPrimary : .white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Completion Feedback")
+                        .font(.system(size: 14, weight: .bold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+
+                    Text("Pulse and/or sound when Claude finishes a message")
+                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+
+                Spacer()
+            }
+
+            completionFeedbackToggle(
+                label: "Pulse menu bar icon",
+                isOn: $settings.completionPulseEnabled
+            )
+
+            completionFeedbackToggle(
+                label: "Play sound",
+                isOn: $settings.completionSoundEnabled
+            )
+
+            if settings.completionSoundEnabled {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("SOUND")
+                        .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                        .tracking(0.5)
+
+                    Picker("", selection: $settings.completionSoundName) {
+                        ForEach(Self.completionSoundChoices, id: \.name) { choice in
+                            Text(choice.label).tag(choice.name)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: settings.completionSoundName) { _, newName in
+                        NSSound(named: NSSound.Name(newName))?.play()
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                .fill(theme.cardGradient)
+                .overlay(
+                    RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                        .stroke(theme.glassBorder, lineWidth: 1)
+                )
+        )
+    }
+
+    private func completionFeedbackToggle(label: String, isOn: Binding<Bool>) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 12, weight: .medium, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+
+            Spacer()
+
+            Toggle("", isOn: isOn)
+                .toggleStyle(.switch)
+                .tint(theme.accentPrimary)
+                .scaleEffect(0.8)
+                .labelsHidden()
         }
         .padding(.vertical, 2)
     }

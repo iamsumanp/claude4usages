@@ -34,13 +34,11 @@ public final class HookHTTPServer: @unchecked Sendable {
             }
         }
 
-        // Try default port first, fall back to auto-assign
-        let port: NWEndpoint.Port
-        if let preferredPort = NWEndpoint.Port(rawValue: defaultPort) {
-            port = preferredPort
-        } else {
-            port = .any
-        }
+        // Always let the OS assign a free loopback port. The hook scripts read
+        // ~/.claude/claude4usages-hook-port to find us, so the actual port doesn't
+        // matter — and binding to a fixed port collides with other usage trackers
+        // that also default to 19847.
+        let port: NWEndpoint.Port = .any
 
         let parameters = NWParameters.tcp
         parameters.requiredLocalEndpoint = NWEndpoint.hostPort(host: .ipv4(.loopback), port: port)

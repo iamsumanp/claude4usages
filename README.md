@@ -4,6 +4,10 @@ A macOS menu bar app that shows your Claude usage at a glance.
 
 The menu bar icon is a tight cluster of compact percentage shapes — one for your **5-hour session**, one for your **7-day weekly window**, and (optionally) shapes for your **Opus weekly** and **Sonnet weekly** allowances. Click it for a popover with the full breakdown, refresh button, and settings.
 
+
+<img width="467" height="701" alt="claude4usages" src="https://github.com/user-attachments/assets/acf4d812-5144-4d12-8610-2a68e18c7984" />
+
+
 ## Requirements
 
 - **macOS 15+**

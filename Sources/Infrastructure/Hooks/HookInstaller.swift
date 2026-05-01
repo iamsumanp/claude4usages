@@ -2,10 +2,10 @@ import Foundation
 import Domain
 
 /// Installs and uninstalls ClaudeBar hooks in ~/.claude/settings.json.
-/// Hook commands use the __claudebar_hook function wrapper for identification.
+/// Hook commands use the __claude4usages_hook function wrapper for identification.
 public enum HookInstaller {
     /// The marker function name used to identify ClaudeBar hooks
-    static let hookMarker = "__claudebar_hook"
+    static let hookMarker = "__claude4usages_hook"
 
     /// The settings file path
     public static var settingsPath: String {
@@ -15,7 +15,7 @@ public enum HookInstaller {
 
     /// The hook command template. Port is read from the discovery file at runtime.
     static let hookCommand = """
-    __claudebar_hook() { PORT=$(cat "$HOME/.claude/claudebar-hook-port" 2>/dev/null || echo \(HookConstants.defaultPort)); cat | curl -s -X POST "http://localhost:${PORT}/hook" -H 'Content-Type: application/json' -d @- > /dev/null 2>&1 & }; __claudebar_hook
+    __claude4usages_hook() { PORT=$(cat "$HOME/.claude/claude4usages-hook-port" 2>/dev/null || echo \(HookConstants.defaultPort)); cat | curl -s -X POST "http://localhost:${PORT}/hook" -H 'Content-Type: application/json' -d @- > /dev/null 2>&1 & }; __claude4usages_hook
     """
 
     /// The event names to register hooks for
@@ -45,7 +45,7 @@ public enum HookInstaller {
 
             // Remove any existing ClaudeBar matcher entries for this event
             matcherEntries.removeAll { entry in
-                containsClaudeBarHook(in: entry)
+                containsClaude4UsagesHook(in: entry)
             }
 
             // Add the new hook in matcher format
@@ -76,7 +76,7 @@ public enum HookInstaller {
             guard var matcherEntries = hooks[event] as? [[String: Any]] else { continue }
 
             matcherEntries.removeAll { entry in
-                containsClaudeBarHook(in: entry)
+                containsClaude4UsagesHook(in: entry)
             }
 
             if matcherEntries.isEmpty {
@@ -106,13 +106,13 @@ public enum HookInstaller {
         return hooks.values.contains { value in
             guard let matcherEntries = value as? [[String: Any]] else { return false }
             return matcherEntries.contains { entry in
-                containsClaudeBarHook(in: entry)
+                containsClaude4UsagesHook(in: entry)
             }
         }
     }
 
     /// Checks if a matcher entry contains a ClaudeBar hook command.
-    private static func containsClaudeBarHook(in matcherEntry: [String: Any]) -> Bool {
+    private static func containsClaude4UsagesHook(in matcherEntry: [String: Any]) -> Bool {
         guard let innerHooks = matcherEntry["hooks"] as? [[String: Any]] else { return false }
         return innerHooks.contains { hook in
             guard let command = hook["command"] as? String else { return false }

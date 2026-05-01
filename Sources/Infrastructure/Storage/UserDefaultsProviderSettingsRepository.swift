@@ -409,15 +409,15 @@ public final class UserDefaultsProviderSettingsRepository: ZaiSettingsRepository
         // MiniMax settings (key strings kept for backward compatibility 保持向后兼容)
         static let minimaxRegion = "providerConfig.minimaxRegion"
         static let minimaxiAuthEnvVar = "providerConfig.minimaxiAuthEnvVar"
-        static let minimaxiApiKey = "com.claudebar.credentials.minimaxi-api-key"
+        static let minimaxiApiKey = "com.claude4usages.credentials.minimaxi-api-key"
         // Alibaba settings
         static let alibabaRegion = "providerConfig.alibabaRegion"
         static let alibabaCookieSource = "providerConfig.alibabaCookieSource"
-        static let alibabaManualCookie = "com.claudebar.credentials.alibaba-manual-cookie"
-        static let alibabaApiKey = "com.claudebar.credentials.alibaba-api-key"
+        static let alibabaManualCookie = "com.claude4usages.credentials.alibaba-manual-cookie"
+        static let alibabaApiKey = "com.claude4usages.credentials.alibaba-api-key"
         // Credentials (kept compatible with old UserDefaultsCredentialRepository keys)
-        static let githubToken = "com.claudebar.credentials.github-copilot-token"
-        static let githubUsername = "com.claudebar.credentials.github-username"
+        static let githubToken = "com.claude4usages.credentials.github-copilot-token"
+        static let githubUsername = "com.claude4usages.credentials.github-username"
     }
 
     /// Generates the UserDefaults key for a provider's enabled state

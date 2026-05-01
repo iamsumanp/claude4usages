@@ -15,7 +15,7 @@ public final class FileLogger: @unchecked Sendable {
     public static let shared = FileLogger()
     
     private let fileURL: URL
-    private let queue = DispatchQueue(label: "com.tddworks.ClaudeBar.FileLogger")
+    private let queue = DispatchQueue(label: "com.claude4usages.app.FileLogger")
     private let maxFileSize: UInt64 = 5 * 1024 * 1024  // 5MB
     
     /// The directory containing log files
@@ -27,8 +27,8 @@ public final class FileLogger: @unchecked Sendable {
         // ~/Library/Logs/ClaudeBar/ClaudeBar.log
         let logsDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Logs", isDirectory: true)
-            .appendingPathComponent("ClaudeBar", isDirectory: true)
-        
+            .appendingPathComponent("claude4usages", isDirectory: true)
+
         // Create directory if needed
         // Note: Can't use AppLog here as FileLogger is used by AppLog (circular dependency)
         do {
@@ -36,8 +36,8 @@ public final class FileLogger: @unchecked Sendable {
         } catch {
             NSLog("[FileLogger] Failed to create logs directory at %@: %@", logsDir.path, error.localizedDescription)
         }
-        
-        self.fileURL = logsDir.appendingPathComponent("ClaudeBar.log")
+
+        self.fileURL = logsDir.appendingPathComponent("claude4usages.log")
     }
     
     /// Creates a thread-safe timestamp string.

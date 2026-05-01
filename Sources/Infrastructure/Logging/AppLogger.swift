@@ -91,7 +91,7 @@ public struct CategoryLogger: Sendable {
     
     init(category: String) {
         self.category = category
-        let subsystem = Bundle.main.bundleIdentifier ?? "com.tddworks.ClaudeBar"
+        let subsystem = Bundle.main.bundleIdentifier ?? "com.claude4usages.app"
         self.osLogger = Logger(subsystem: subsystem, category: category)
     }
     

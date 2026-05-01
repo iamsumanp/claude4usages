@@ -8,7 +8,7 @@ import Mockable
 struct AlibabaProviderTests {
 
     private func makeSettingsRepository() -> UserDefaultsProviderSettingsRepository {
-        let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+        let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         return UserDefaultsProviderSettingsRepository(userDefaults: defaults)
     }

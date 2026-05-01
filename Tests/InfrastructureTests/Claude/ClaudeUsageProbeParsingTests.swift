@@ -158,7 +158,7 @@ struct ClaudeUsageProbeParsingTests {
     static let newTrustPromptOutput = """
     Accessing workspace:
 
-    /Users/testuser/Library/Application Support/ClaudeBar/Probe
+    /Users/testuser/Library/Application Support/claude4usages/Probe
 
     Quick safety check: Is this a project you created or one you trust? (Like your own code, a well-known open source project, or work from your team). If not, take a moment to review what's in this folder first.
 
@@ -632,7 +632,7 @@ struct ClaudeUsageProbeParsingTests {
     // Real output from API Usage Billing account showing subscription-only message
     static let apiUsageBillingOutput = """
     Sonnet 4.5 · API Usage Billing · dzienisz
-    ~/Library/Application Support/ClaudeBar/Probe
+    ~/Library/Application Support/claude4usages/Probe
 
     Settings: Status  Config  Usage (tab to cycle)
 
@@ -645,7 +645,7 @@ struct ClaudeUsageProbeParsingTests {
     static let claudeApiWithQuotasOutput = """
     ▐▛███▜▌   Claude Code v2.1.34
     ▝▜█████▛▘  Sonnet 4.5 · Claude API
-    ▘▘ ▝▝    ~/Library/Application Support/ClaudeBar/Probe
+    ▘▘ ▝▝    ~/Library/Application Support/claude4usages/Probe
 
     ❯ /usage
     Settings:  Status   Config   Usage  (←/→ or tab to cycle)

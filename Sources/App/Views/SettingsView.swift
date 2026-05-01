@@ -734,7 +734,7 @@ struct SettingsContentView: View {
             }
             .buttonStyle(.plain)
 
-            Text("Opens ClaudeBar.log in TextEdit")
+            Text("Opens claude4usages.log in TextEdit")
                 .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
@@ -866,7 +866,7 @@ struct SettingsContentView: View {
                     .font(.system(size: 14, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
-                Text("Start ClaudeBar when you log in")
+                Text("Start claude4usages when you log in")
                     .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }

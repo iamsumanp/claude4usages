@@ -32,7 +32,7 @@ struct CodexConfigSpec {
         @Test
         func `switching to API mode uses API probe for refresh`() async throws {
             // Given — dual probe setup with isolated UserDefaults
-            let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+            let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suiteName)!
             let settings = UserDefaultsProviderSettingsRepository(userDefaults: defaults)
             settings.setEnabled(true, forProvider: "codex")
@@ -79,7 +79,7 @@ struct CodexConfigSpec {
         @Test
         func `probe mode is persisted in UserDefaults`() {
             // Given
-            let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+            let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suiteName)!
             let settings = UserDefaultsProviderSettingsRepository(userDefaults: defaults)
 
@@ -116,7 +116,7 @@ struct CodexConfigSpec {
         @Test
         func `supportsApiMode is true for dual-probe provider`() {
             // Given — dual probe setup
-            let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+            let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suiteName)!
             let settings = UserDefaultsProviderSettingsRepository(userDefaults: defaults)
             settings.setEnabled(true, forProvider: "codex")

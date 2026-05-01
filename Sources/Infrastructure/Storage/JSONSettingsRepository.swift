@@ -296,15 +296,15 @@ public final class JSONSettingsRepository:
     // Credentials (UserDefaults for now, Keychain migration later)
 
     public func saveGithubToken(_ token: String) {
-        credentials.set(token, forKey: "com.claudebar.credentials.github-copilot-token")
+        credentials.set(token, forKey: "com.claude4usages.credentials.github-copilot-token")
     }
 
     public func getGithubToken() -> String? {
-        credentials.string(forKey: "com.claudebar.credentials.github-copilot-token")
+        credentials.string(forKey: "com.claude4usages.credentials.github-copilot-token")
     }
 
     public func deleteGithubToken() {
-        credentials.removeObject(forKey: "com.claudebar.credentials.github-copilot-token")
+        credentials.removeObject(forKey: "com.claude4usages.credentials.github-copilot-token")
     }
 
     public func hasGithubToken() -> Bool {
@@ -312,15 +312,15 @@ public final class JSONSettingsRepository:
     }
 
     public func saveGithubUsername(_ username: String) {
-        credentials.set(username, forKey: "com.claudebar.credentials.github-username")
+        credentials.set(username, forKey: "com.claude4usages.credentials.github-username")
     }
 
     public func getGithubUsername() -> String? {
-        credentials.string(forKey: "com.claudebar.credentials.github-username")
+        credentials.string(forKey: "com.claude4usages.credentials.github-username")
     }
 
     public func deleteGithubUsername() {
-        credentials.removeObject(forKey: "com.claudebar.credentials.github-username")
+        credentials.removeObject(forKey: "com.claude4usages.credentials.github-username")
     }
 
     // MARK: - BedrockSettingsRepository
@@ -379,27 +379,27 @@ public final class JSONSettingsRepository:
     }
 
     public func saveAlibabaManualCookie(_ cookie: String) {
-        credentials.set(cookie, forKey: "com.claudebar.credentials.alibaba-manual-cookie")
+        credentials.set(cookie, forKey: "com.claude4usages.credentials.alibaba-manual-cookie")
     }
 
     public func getAlibabaManualCookie() -> String? {
-        credentials.string(forKey: "com.claudebar.credentials.alibaba-manual-cookie")
+        credentials.string(forKey: "com.claude4usages.credentials.alibaba-manual-cookie")
     }
 
     public func saveAlibabaApiKey(_ key: String) {
-        credentials.set(key, forKey: "com.claudebar.credentials.alibaba-api-key")
+        credentials.set(key, forKey: "com.claude4usages.credentials.alibaba-api-key")
     }
 
     public func getAlibabaApiKey() -> String? {
-        credentials.string(forKey: "com.claudebar.credentials.alibaba-api-key")
+        credentials.string(forKey: "com.claude4usages.credentials.alibaba-api-key")
     }
 
     public func deleteAlibabaApiKey() {
-        credentials.removeObject(forKey: "com.claudebar.credentials.alibaba-api-key")
+        credentials.removeObject(forKey: "com.claude4usages.credentials.alibaba-api-key")
     }
 
     public func hasAlibabaApiKey() -> Bool {
-        credentials.object(forKey: "com.claudebar.credentials.alibaba-api-key") != nil
+        credentials.object(forKey: "com.claude4usages.credentials.alibaba-api-key") != nil
     }
 
     // MARK: - HookSettingsRepository
@@ -446,15 +446,15 @@ public final class JSONSettingsRepository:
     // MiniMax Credentials (UserDefaults for now)
 
     public func saveMinimaxApiKey(_ key: String) {
-        credentials.set(key, forKey: "com.claudebar.credentials.minimax-api-key")
+        credentials.set(key, forKey: "com.claude4usages.credentials.minimax-api-key")
     }
 
     public func getMinimaxApiKey() -> String? {
-        credentials.string(forKey: "com.claudebar.credentials.minimax-api-key")
+        credentials.string(forKey: "com.claude4usages.credentials.minimax-api-key")
     }
 
     public func deleteMinimaxApiKey() {
-        credentials.removeObject(forKey: "com.claudebar.credentials.minimax-api-key")
+        credentials.removeObject(forKey: "com.claude4usages.credentials.minimax-api-key")
     }
 
     public func hasMinimaxApiKey() -> Bool {

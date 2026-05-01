@@ -64,6 +64,6 @@ public final class JSONExtensionConfigRepository: ExtensionConfigRepository, @un
     // MARK: - Private
 
     private func secretKey(fieldId: String, extensionId: String) -> String {
-        "com.claudebar.credentials.ext-\(extensionId)-\(fieldId)"
+        "com.claude4usages.credentials.ext-\(extensionId)-\(fieldId)"
     }
 }

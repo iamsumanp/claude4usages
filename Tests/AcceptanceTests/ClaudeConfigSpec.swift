@@ -33,7 +33,7 @@ struct ClaudeConfigSpec {
         @Test
         func `switching to API mode uses API probe for refresh`() async throws {
             // Given — dual probe setup
-            let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+            let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suiteName)!
             let settings = UserDefaultsProviderSettingsRepository(userDefaults: defaults)
             settings.setEnabled(true, forProvider: "claude")
@@ -80,7 +80,7 @@ struct ClaudeConfigSpec {
         @Test
         func `probe mode is persisted in UserDefaults`() {
             // Given
-            let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+            let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suiteName)!
             let settings = UserDefaultsProviderSettingsRepository(userDefaults: defaults)
 
@@ -96,7 +96,7 @@ struct ClaudeConfigSpec {
 
         @Test
         func `api mode falls back to CLI when OAuth API is unavailable`() async throws {
-            let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+            let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suiteName)!
             let settings = UserDefaultsProviderSettingsRepository(userDefaults: defaults)
             settings.setEnabled(true, forProvider: "claude")
@@ -133,7 +133,7 @@ struct ClaudeConfigSpec {
 
         @Test
         func `api mode does not fall back to CLI when cli fallback is disabled`() async throws {
-            let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+            let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suiteName)!
             let settings = UserDefaultsProviderSettingsRepository(userDefaults: defaults)
             settings.setEnabled(true, forProvider: "claude")
@@ -175,7 +175,7 @@ struct ClaudeConfigSpec {
 
         @Test
         func `cli mode falls back to API when CLI parsing fails and OAuth is available`() async throws {
-            let suiteName = "com.claudebar.test.\(UUID().uuidString)"
+            let suiteName = "com.claude4usages.test.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suiteName)!
             let settings = UserDefaultsProviderSettingsRepository(userDefaults: defaults)
             settings.setEnabled(true, forProvider: "claude")

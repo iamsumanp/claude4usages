@@ -9,10 +9,10 @@ public final class ExtensionRegistry: Sendable {
     private let configRepository: (any ExtensionConfigRepository)?
     private let cliExecutor: CLIExecutor?
 
-    /// Default extensions directory: ~/.claudebar/extensions/
+    /// Default extensions directory: ~/.claude4usages/extensions/
     public static var defaultDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: ".claudebar")
+            .appending(path: ".claude4usages")
             .appending(path: "extensions")
     }
 

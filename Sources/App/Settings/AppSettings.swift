@@ -134,6 +134,29 @@ public final class AppSettings {
         }
     }
 
+    // MARK: - Menu Bar Icon Settings
+
+    /// Display mode for the menu bar icon ("percentageOnly", "iconOnly", "both")
+    public var menuBarIconDisplayMode: String {
+        didSet {
+            repository.setMenuBarIconDisplayMode(menuBarIconDisplayMode)
+        }
+    }
+
+    /// Style mode for the menu bar icon ("monochrome", "colorTranslucent", "colorWithBackground")
+    public var menuBarIconStyleMode: String {
+        didSet {
+            repository.setMenuBarIconStyleMode(menuBarIconStyleMode)
+        }
+    }
+
+    /// Which limit types to show in the menu bar icon
+    public var menuBarIconActiveTypes: [String] {
+        didSet {
+            repository.setMenuBarIconActiveTypes(menuBarIconActiveTypes)
+        }
+    }
+
     // MARK: - Internal
 
     private var isInitializing = true
@@ -161,6 +184,10 @@ public final class AppSettings {
         } else {
             self.usageDisplayMode = .remaining
         }
+
+        self.menuBarIconDisplayMode = repository.menuBarIconDisplayMode()
+        self.menuBarIconStyleMode = repository.menuBarIconStyleMode()
+        self.menuBarIconActiveTypes = repository.menuBarIconActiveTypes()
 
         // Launch at login - read from SMAppService (system service, not JSON)
         self.launchAtLogin = SMAppService.mainApp.status == .enabled

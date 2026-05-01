@@ -84,6 +84,13 @@ struct claude4usagesApp: App {
     /// App settings for theme
     @State private var settings = AppSettings.shared
 
+    /// Mirrors `sessionMonitor.activeSession != nil` as plain `@State`.
+    /// SwiftUI's `MenuBarExtra { } label:` slot doesn't reliably track
+    /// `@Observable` properties when the popover is closed, so we bridge
+    /// the state through an explicit `@State` flag that we write whenever
+    /// a hook event arrives.
+    @State private var hasActiveSession: Bool = false
+
     /// Current theme mode from settings
     private var currentThemeMode: ThemeMode {
         ThemeMode(rawValue: settings.themeMode) ?? .cli
@@ -100,6 +107,9 @@ struct claude4usagesApp: App {
                 AppLog.hooks.info("Hook server started, listening for events")
                 for await event in events {
                     await sessionMonitor.processEvent(event)
+                    await MainActor.run {
+                        hasActiveSession = sessionMonitor.activeSession != nil
+                    }
                     await sendSessionNotification(for: event)
                 }
             } catch {
@@ -152,12 +162,12 @@ struct claude4usagesApp: App {
                 .appThemeProvider(themeModeId: settings.themeMode)
         } label: {
             MenuBarIconView(
-                monitor: monitor,
-                sessionMonitor: sessionMonitor,
+                snapshot: monitor.selectedProvider?.snapshot,
                 displayMode: settings.menuBarIconDisplayMode,
                 styleMode: settings.menuBarIconStyleMode,
                 activeTypes: settings.menuBarIconActiveTypes,
-                hasUpdate: false
+                hasUpdate: false,
+                isSessionActive: hasActiveSession
             )
         }
         .menuBarExtraStyle(.window)

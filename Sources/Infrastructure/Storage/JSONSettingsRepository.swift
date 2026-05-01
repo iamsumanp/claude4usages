@@ -151,6 +151,32 @@ public final class JSONSettingsRepository:
         store.write(value: types, key: "app.menuBarIcon.activeTypes")
     }
 
+    // MARK: - Completion Feedback
+
+    public func completionPulseEnabled() -> Bool {
+        store.read(key: "app.completion.pulseEnabled") ?? true
+    }
+
+    public func setCompletionPulseEnabled(_ enabled: Bool) {
+        store.write(value: enabled, key: "app.completion.pulseEnabled")
+    }
+
+    public func completionSoundEnabled() -> Bool {
+        store.read(key: "app.completion.soundEnabled") ?? false
+    }
+
+    public func setCompletionSoundEnabled(_ enabled: Bool) {
+        store.write(value: enabled, key: "app.completion.soundEnabled")
+    }
+
+    public func completionSoundName() -> String {
+        store.read(key: "app.completion.soundName") ?? "Pop"
+    }
+
+    public func setCompletionSoundName(_ name: String) {
+        store.write(value: name, key: "app.completion.soundName")
+    }
+
     // MARK: - ProviderSettingsRepository
 
     public func isEnabled(forProvider id: String, defaultValue: Bool) -> Bool {

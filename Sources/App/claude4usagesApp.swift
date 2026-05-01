@@ -85,15 +85,6 @@ struct claude4usagesApp: App {
     /// App settings for theme
     @State private var settings = AppSettings.shared
 
-    /// Status of selected provider, considering burn rate setting
-    private var effectiveSelectedProviderStatus: QuotaStatus {
-        guard let snapshot = monitor.selectedProvider?.snapshot else { return .healthy }
-        if settings.burnRateWarningEnabled {
-            return snapshot.paceAwareOverallStatus(burnRateThreshold: settings.burnRateThreshold)
-        }
-        return snapshot.overallStatus
-    }
-
     /// Current theme mode from settings
     private var currentThemeMode: ThemeMode {
         ThemeMode(rawValue: settings.themeMode) ?? .system
@@ -161,64 +152,17 @@ struct claude4usagesApp: App {
                 }
                 .appThemeProvider(themeModeId: settings.themeMode)
         } label: {
-            // Show overall status + active session indicator in menu bar
-            StatusBarIcon(status: effectiveSelectedProviderStatus, activeSession: sessionMonitor.activeSession)
-                .appThemeProvider(themeModeId: settings.themeMode)
+            MenuBarIconView(
+                snapshot: monitor.selectedProvider?.snapshot,
+                displayMode: settings.menuBarIconDisplayMode,
+                styleMode: settings.menuBarIconStyleMode,
+                activeTypes: settings.menuBarIconActiveTypes,
+                hasUpdate: false
+            )
         }
         .menuBarExtraStyle(.window)
     }
 
 }
 
-/// The menu bar icon that reflects the overall quota status.
-/// When a Claude Code session is active, shows a terminal icon with phase color.
-/// Uses theme's `statusBarIconName` if set, otherwise shows status-based icons.
-struct StatusBarIcon: View {
-    let status: QuotaStatus
-    var activeSession: ClaudeSession? = nil
-
-    @Environment(\.appTheme) private var theme
-
-    var body: some View {
-        if let session = activeSession {
-            // Active session: show terminal icon with phase color
-            HStack(spacing: 3) {
-                Image(systemName: "terminal.fill")
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(sessionPhaseColor(session.phase))
-                Image(systemName: iconName)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(iconColor)
-            }
-        } else {
-            Image(systemName: iconName)
-                .symbolRenderingMode(.palette)
-                .foregroundStyle(iconColor)
-        }
-    }
-
-    private var iconName: String {
-        // Use theme's custom icon if provided
-        if let themeIcon = theme.statusBarIconName {
-            return themeIcon
-        }
-        // Otherwise use status-based icon
-        switch status {
-        case .depleted:
-            return "chart.bar.xaxis"
-        case .critical:
-            return "exclamationmark.triangle.fill"
-        case .warning, .healthy:
-            return "chart.bar.fill"
-        }
-    }
-
-    private var iconColor: Color {
-        theme.statusColor(for: status)
-    }
-
-    private func sessionPhaseColor(_ phase: ClaudeSession.Phase) -> Color {
-        phase.color
-    }
-}
 

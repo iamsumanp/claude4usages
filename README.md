@@ -2,7 +2,7 @@
 
 A macOS menu bar app that shows your Claude usage at a glance.
 
-The menu bar icon is a tight cluster of compact percentage shapes — one for your **5-hour session**, one for your **7-day weekly window**, and (optionally) shapes for your **Opus weekly** and **Sonnet weekly** allowances. Click it for a popover with the full breakdown, refresh button, and settings.
+The menu bar icon displays a tight cluster of compact percentage shapes — one for your **5-hour session**, one for your **7-day weekly window**, and optionally shapes for your **Opus weekly** and **Sonnet weekly** allowances. The asterisk icon turns **green** while `claude` is running anywhere on your machine. Click it for a full breakdown, refresh button, and settings.
 
 
 <img width="467" height="701" alt="claude4usages" src="https://github.com/user-attachments/assets/acf4d812-5144-4d12-8610-2a68e18c7984" />
@@ -24,7 +24,7 @@ The build is ad-hoc signed (not notarized), so the first launch is blocked by Ga
 xattr -dr com.apple.quarantine /Applications/claude4usages.app
 ```
 
-Then launch it from Spotlight or `/Applications`. The asterisk icon will appear in your menu bar.
+Then launch it from Spotlight or `/Applications`.
 
 ## Build from source
 
@@ -37,30 +37,41 @@ swift build -c release
 
 No Xcode, no Tuist, no asset catalogs — pure SwiftPM.
 
+## Active session indicator
+
+The menu bar asterisk turns **green** while any `claude` process is running on your machine (CLI or IDE). The app polls `pgrep -x claude` every 3 seconds on a background thread — negligible CPU/RAM, no effect on UI responsiveness.
+
 ## Configure
 
-Click the menu bar icon → gear → **Menu Bar Icon** to choose:
+Click the menu bar icon → gear to access settings:
 
-- **Display mode** — Percentage Only / Icon Only / Both
-- **Style** — Monochrome / Color (Translucent) / Color (With Background)
-- **Which limits to show** — 5-hour session, 7-day weekly, Opus weekly, Sonnet weekly
+- **Quota Display** — show remaining or used percentage; toggle daily usage cards
+- **Menu Bar Icon** — Display mode (% Only / Icon Only / Both), Style (Monochrome / Color), which limits to show
+- **Claude Configuration** — probe mode (CLI / API), budget tracking
+- **Background Sync**, **Burn Rate Warning**, **Hooks**, **Launch at Login**, and more
 
 Settings are persisted at `~/.claude4usages/settings.json`. Logs are at `~/Library/Logs/claude4usages/claude4usages.log`.
 
 ## How it works
 
-claude4usages spawns `claude /usage` periodically, scrubs the TUI's ANSI cursor sequences, and parses out the `Current session`, `Current week (all models)`, and per-model percentages. Those feed an in-process `QuotaMonitor` whose state drives both the menu bar icon and the popover. No network calls, no API tokens, no cookies.
+claude4usages spawns `claude /usage` periodically, scrubs the TUI's ANSI cursor-positioning sequences, and parses `Current session`, `Current week (all models)`, and per-model percentages. Those feed an in-process `QuotaMonitor` whose state drives both the menu bar icon and the popover.
+
+**No network calls, no API tokens, no cookies** — all data comes from the local `claude` CLI.
+
+**Daily usage cards** (Cost, Tokens, Working Time) are read from `~/.claude/projects/` JSONL session files — also 100% local.
 
 ## Architecture
 
 ```
 Sources/
-├── Domain/           # SPM library — provider protocols, QuotaMonitor, settings, models
+├── Domain/           # SPM library — QuotaMonitor, settings protocols, models
 ├── Infrastructure/   # SPM library — Claude probes, JSON settings, MenuBar renderer
-└── App/              # SPM executable — SwiftUI views, themes, MenuBarExtra label
+└── App/              # SPM executable — AppDelegate (NSStatusItem), SwiftUI popover
 ```
 
-Three SPM targets: `Domain` → `Infrastructure` → `claude4usages`. The menu bar shape rendering lives in `Sources/Infrastructure/MenuBar/` (`MenuBarIconRenderer`, `ShapeIconRenderer`, `IconShapePaths`, `MenuBarIconColorScheme`) and is fed by the `ClaudeSnapshotToIconData` adapter that maps `UsageSnapshot` → `IconUsageData`.
+Three SPM targets: `Domain` → `Infrastructure` → `claude4usages`.
+
+The menu bar uses **AppKit `NSStatusItem`** (not SwiftUI `MenuBarExtra`) so the icon updates reactively without requiring the popover to be open. The icon shape rendering lives in `Sources/Infrastructure/MenuBar/`.
 
 ## License
 

@@ -51,6 +51,7 @@ struct SettingsContentView: View {
                 VStack(spacing: 12) {
                     themeCard
                     displayModeCard
+                    menuBarIconCard
                     overviewModeCard
                     providersCard
                     if isClaudeEnabled {
@@ -226,6 +227,117 @@ struct SettingsContentView: View {
                 .scaleEffect(0.8)
                 .labelsHidden()
         }
+    }
+
+    // MARK: - Menu Bar Icon Card
+
+    private var menuBarIconCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(theme.accentGradient)
+                        .frame(width: 32, height: 32)
+
+                    Image(systemName: "menubar.rectangle")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(theme.id == "cli" ? theme.textPrimary : .white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Menu Bar Icon")
+                        .font(.system(size: 14, weight: .bold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+
+                    Text("Shape, style and which limits to show")
+                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+
+                Spacer()
+            }
+
+            // Display mode
+            VStack(alignment: .leading, spacing: 6) {
+                Text("DISPLAY MODE")
+                    .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .tracking(0.5)
+
+                Picker("", selection: $settings.menuBarIconDisplayMode) {
+                    Text("% Only").tag("percentageOnly")
+                    Text("Icon Only").tag("iconOnly")
+                    Text("Both").tag("both")
+                }
+                .pickerStyle(.segmented)
+            }
+
+            // Style mode
+            VStack(alignment: .leading, spacing: 6) {
+                Text("STYLE")
+                    .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .tracking(0.5)
+
+                Picker("", selection: $settings.menuBarIconStyleMode) {
+                    Text("Mono").tag("monochrome")
+                    Text("Color").tag("colorTranslucent")
+                    Text("Color+BG").tag("colorWithBackground")
+                }
+                .pickerStyle(.segmented)
+            }
+
+            // Active limit toggles
+            VStack(alignment: .leading, spacing: 6) {
+                Text("SHOW LIMITS")
+                    .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .tracking(0.5)
+
+                menuBarLimitToggle(label: "5-hour session", value: "fiveHour")
+                menuBarLimitToggle(label: "7-day weekly", value: "sevenDay")
+                menuBarLimitToggle(label: "Opus weekly", value: "opusWeekly")
+                menuBarLimitToggle(label: "Sonnet weekly", value: "sonnetWeekly")
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                .fill(theme.cardGradient)
+                .overlay(
+                    RoundedRectangle(cornerRadius: theme.cardCornerRadius)
+                        .stroke(theme.glassBorder, lineWidth: 1)
+                )
+        )
+    }
+
+    private func menuBarLimitToggle(label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 12, weight: .medium, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+
+            Spacer()
+
+            Toggle("", isOn: Binding(
+                get: { settings.menuBarIconActiveTypes.contains(value) },
+                set: { isOn in
+                    var types = settings.menuBarIconActiveTypes
+                    if isOn {
+                        if !types.contains(value) { types.append(value) }
+                    } else {
+                        types.removeAll { $0 == value }
+                    }
+                    settings.menuBarIconActiveTypes = types
+                }
+            ))
+            .toggleStyle(.switch)
+            .tint(theme.accentPrimary)
+            .scaleEffect(0.8)
+            .labelsHidden()
+        }
+        .padding(.vertical, 2)
     }
 
     // MARK: - Overview Mode Card

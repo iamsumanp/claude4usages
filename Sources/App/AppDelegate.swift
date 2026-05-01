@@ -249,7 +249,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Runs `pgrep -x claude` synchronously on whatever thread calls it.
     /// Must NOT be called on @MainActor — use Task.detached or a background thread.
-    private static func isClaudeProcessRunning() -> Bool {
+    private nonisolated static func isClaudeProcessRunning() -> Bool {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
         process.arguments = ["-x", "claude"]

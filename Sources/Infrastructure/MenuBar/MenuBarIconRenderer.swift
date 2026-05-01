@@ -90,7 +90,10 @@ public final class MenuBarIconRenderer {
 
         switch settings.displayMode {
         case .percentageOnly:
-            icon = createCombinedPercentageIcon(data: data, types: activeTypes, isMonochrome: isMonochrome, button: button)
+            let activeColor: NSColor? = isSessionActive
+                ? NSColor(srgbRed: 0.30, green: 0.78, blue: 0.45, alpha: 1.0) : nil
+            icon = createCombinedPercentageIcon(data: data, types: activeTypes, isMonochrome: isMonochrome,
+                                                activeOverride: activeColor, button: button)
 
         case .iconOnly:
             if let iconCopy = loadAppIconImage(isMonochrome: isMonochrome, sessionActive: isSessionActive) {
@@ -153,58 +156,100 @@ public final class MenuBarIconRenderer {
         return result
     }
 
-    /// Creates an icon for a single limit type, suitable for testing or previews.
+    /// Creates an icon for a single limit type.
+    /// - Parameter activeOverride: when non-nil, overrides the stroke/fill colour with this
+    ///   fixed colour so circles remain visible alongside a non-template icon (e.g. active session).
     public func createIconForType(
         _ type: IconLimitType,
         data: IconUsageData,
         isMonochrome: Bool,
+        activeOverride: NSColor? = nil,
         button: NSStatusBarButton?
     ) -> NSImage? {
         let removeBackground = settings.styleMode == .colorTranslucent
-        // Always show placeholder (0%) when data is nil — callers pre-filter inactive types
-        let showPlaceholder = true
 
         switch type {
         case .fiveHour:
-            let percentage = data.fiveHour?.percentage ?? (showPlaceholder ? 0 : nil)
-            guard let percentage else { return nil }
+            let percentage = data.fiveHour?.percentage ?? 0
+            if let activeColor = activeOverride {
+                return createCircleActiveImage(percentage: percentage, color: activeColor, size: NSSize(width: 18, height: 18))
+            }
             if isMonochrome {
                 return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: true)
-            } else {
-                return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: removeBackground)
             }
+            return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: removeBackground)
 
         case .sevenDay:
-            let percentage = data.sevenDay?.percentage ?? (showPlaceholder ? 0 : nil)
-            guard let percentage else { return nil }
+            let percentage = data.sevenDay?.percentage ?? 0
+            if let activeColor = activeOverride {
+                return createCircleActiveImage(percentage: percentage, color: activeColor, size: NSSize(width: 18, height: 18), dashed: true)
+            }
             if isMonochrome {
                 return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayStyle: true, button: button, removeBackground: true)
-            } else {
-                return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayColor: true, button: button, removeBackground: removeBackground)
             }
+            return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayColor: true, button: button, removeBackground: removeBackground)
 
         case .opusWeekly:
-            let percentage = data.opus?.percentage ?? (showPlaceholder ? 0 : nil)
-            guard let percentage else { return nil }
-            return ShapeIconRenderer.createVerticalRectangleIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            let percentage = data.opus?.percentage ?? 0
+            return ShapeIconRenderer.createVerticalRectangleIcon(percentage: percentage, isMonochrome: activeOverride == nil && isMonochrome, button: button, removeBackground: removeBackground)
 
         case .sonnetWeekly:
-            let percentage = data.sonnet?.percentage ?? (showPlaceholder ? 0 : nil)
-            guard let percentage else { return nil }
-            return ShapeIconRenderer.createHorizontalRectangleIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            let percentage = data.sonnet?.percentage ?? 0
+            return ShapeIconRenderer.createHorizontalRectangleIcon(percentage: percentage, isMonochrome: activeOverride == nil && isMonochrome, button: button, removeBackground: removeBackground)
 
         case .extraUsage:
-            let percentage: Double?
-            if let extraUsage = data.extraUsage, extraUsage.enabled {
-                percentage = extraUsage.percentage
-            } else if showPlaceholder {
-                percentage = 0
-            } else {
-                percentage = nil
-            }
-            guard let percentage else { return nil }
-            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            let percentage = (data.extraUsage?.enabled == true) ? (data.extraUsage?.percentage ?? 0) : 0
+            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, isMonochrome: activeOverride == nil && isMonochrome, button: button, removeBackground: removeBackground)
         }
+    }
+
+    /// Draws a circle progress indicator in a fixed `color` — used when the combined
+    /// icon is non-template (e.g. active session) so the circles stay visible.
+    private func createCircleActiveImage(
+        percentage: Double,
+        color: NSColor,
+        size: NSSize,
+        dashed: Bool = false
+    ) -> NSImage {
+        let image = NSImage(size: size)
+        image.lockFocus()
+        defer { image.unlockFocus() }
+
+        let center = NSPoint(x: size.width / 2, y: size.height / 2)
+        let radius = min(size.width, size.height) / 2 - 2
+
+        // Track
+        color.withAlphaComponent(0.25).setStroke()
+        let track = NSBezierPath()
+        track.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
+        track.lineWidth = 1.5
+        if dashed { track.setLineDash([3, 1], count: 2, phase: 0) }
+        track.stroke()
+
+        // Progress arc
+        if percentage > 0 {
+            color.setStroke()
+            let arc = NSBezierPath()
+            let sweep = CGFloat(percentage) / 100.0 * 360
+            arc.appendArc(withCenter: center, radius: radius, startAngle: 90, endAngle: 90 - sweep, clockwise: true)
+            arc.lineWidth = 2.0
+            arc.lineCapStyle = .round
+            arc.stroke()
+        }
+
+        // Percentage label
+        let fontSize: CGFloat = percentage >= 100 ? size.width * 0.275 : size.width * 0.38
+        let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
+        let text = "\(Int(percentage))"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: color
+        ]
+        let textSize = text.size(withAttributes: attrs)
+        text.draw(at: NSPoint(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2), withAttributes: attrs)
+
+        image.isTemplate = false
+        return image
     }
 
     // MARK: - Private Composite Methods
@@ -213,12 +258,13 @@ public final class MenuBarIconRenderer {
         data: IconUsageData,
         types: [IconLimitType],
         isMonochrome: Bool,
+        activeOverride: NSColor? = nil,
         button: NSStatusBarButton?
     ) -> NSImage {
         guard !types.isEmpty else { return createSimpleCircleIcon() }
 
         let icons = types.compactMap { type in
-            createIconForType(type, data: data, isMonochrome: isMonochrome, button: button)
+            createIconForType(type, data: data, isMonochrome: isMonochrome, activeOverride: activeOverride, button: button)
         }
 
         if icons.isEmpty {
@@ -227,7 +273,7 @@ public final class MenuBarIconRenderer {
             return icons[0]
         } else {
             let combined = combineIcons(icons, spacing: 3.0, height: 18)
-            combined.isTemplate = isMonochrome
+            combined.isTemplate = isMonochrome && activeOverride == nil
             return combined
         }
     }
@@ -243,16 +289,20 @@ public final class MenuBarIconRenderer {
             return createCombinedPercentageIcon(data: data, types: types, isMonochrome: isMonochrome, button: button)
         }
 
+        // When session active, render circles in green (not template black) so
+        // they're visible alongside the non-template green asterisk.
+        let activeColor: NSColor? = sessionActive
+            ? NSColor(srgbRed: 0.30, green: 0.78, blue: 0.45, alpha: 1.0)
+            : nil
         let percentageIcons = types.compactMap { type in
-            createIconForType(type, data: data, isMonochrome: isMonochrome, button: button)
+            createIconForType(type, data: data, isMonochrome: isMonochrome,
+                              activeOverride: activeColor, button: button)
         }
 
         var allIcons = [appIconCopy]
         allIcons.append(contentsOf: percentageIcons)
 
         let combined = combineIcons(allIcons, spacing: 3.0, height: 18)
-        // When the session is active, the AppIcon's green tint is non-template
-        // and the combined image must not be template-tinted (which would erase it).
         combined.isTemplate = isMonochrome && !sessionActive
         return combined
     }

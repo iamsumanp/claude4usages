@@ -11,6 +11,7 @@ struct MenuBarIconView: View {
     let styleMode: String
     let activeTypes: [String]
     let hasUpdate: Bool
+    let isSessionActive: Bool
 
     var body: some View {
         Image(nsImage: rendered)
@@ -19,7 +20,12 @@ struct MenuBarIconView: View {
     private var rendered: NSImage {
         let renderer = MenuBarIconRenderer(settings: rendererSettings)
         let iconData = makeIconUsageData(from: snapshot)
-        return renderer.createIcon(usageData: iconData, hasUpdate: hasUpdate, button: nil)
+        return renderer.createIcon(
+            usageData: iconData,
+            hasUpdate: hasUpdate,
+            isSessionActive: isSessionActive,
+            button: nil
+        )
     }
 
     private var rendererSettings: MenuBarIconRendererSettings {

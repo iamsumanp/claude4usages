@@ -156,7 +156,8 @@ struct claude4usagesApp: App {
                 displayMode: settings.menuBarIconDisplayMode,
                 styleMode: settings.menuBarIconStyleMode,
                 activeTypes: settings.menuBarIconActiveTypes,
-                hasUpdate: false
+                hasUpdate: false,
+                isSessionActive: sessionMonitor.activeSession != nil
             )
         }
         .menuBarExtraStyle(.window)

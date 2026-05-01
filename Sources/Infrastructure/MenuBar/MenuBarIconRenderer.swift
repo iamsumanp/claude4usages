@@ -65,18 +65,21 @@ public final class MenuBarIconRenderer {
     /// - Parameters:
     ///   - usageData: Usage data snapshot (nil renders a bare placeholder)
     ///   - hasUpdate: Whether an update badge should be shown
+    ///   - isSessionActive: Whether a Claude Code session is currently active
     ///   - button: Status bar button (used to read effective appearance)
     /// - Returns: The rendered icon image
     public func createIcon(
         usageData: IconUsageData?,
         hasUpdate: Bool,
+        isSessionActive: Bool = false,
         button: NSStatusBarButton?
     ) -> NSImage {
         guard let data = usageData else {
             let size = NSSize(width: 22, height: 22)
-            return settings.styleMode == .monochrome ?
+            let placeholder = settings.styleMode == .monochrome ?
                 createCircleTemplateImage(percentage: 0, size: size, button: button, removeBackground: true) :
                 createCircleImage(percentage: 0, size: size, button: button, removeBackground: true)
+            return isSessionActive ? addActiveSessionDot(placeholder) : placeholder
         }
 
         let activeTypes = settings.activeTypes
@@ -102,8 +105,36 @@ public final class MenuBarIconRenderer {
         if hasUpdate {
             icon = addBadgeToImage(icon)
         }
+        if isSessionActive {
+            icon = addActiveSessionDot(icon)
+        }
 
         return icon
+    }
+
+    /// Adds a small green dot in the top-left corner indicating an active Claude Code session.
+    /// Subtle but visible — same size as the update badge but green and positioned on the opposite side.
+    private func addActiveSessionDot(_ baseImage: NSImage) -> NSImage {
+        let size = baseImage.size
+        let expandedSize = NSSize(width: size.width + 2.5, height: size.height + 2.5)
+        let dotted = NSImage(size: expandedSize)
+
+        dotted.lockFocus()
+        baseImage.draw(in: NSRect(origin: NSPoint(x: 2.5, y: 0), size: size))
+
+        let radius: CGFloat = 2.0
+        let diameter = radius * 2
+        let dotRect = NSRect(x: 0.5, y: expandedSize.height - diameter - 1.5, width: diameter, height: diameter)
+
+        NSGraphicsContext.saveGraphicsState()
+        NSColor(srgbRed: 0.30, green: 0.78, blue: 0.45, alpha: 1.0).setFill()
+        NSBezierPath(ovalIn: dotRect).fill()
+        NSGraphicsContext.restoreGraphicsState()
+
+        dotted.unlockFocus()
+        // The active-session dot is a colored marker — keep it visible regardless of template flag
+        dotted.isTemplate = false
+        return dotted
     }
 
     /// Creates an icon for a single limit type, suitable for testing or previews.

@@ -414,6 +414,9 @@ struct MenuContentView: View {
             providerSectionHeader(provider: provider)
 
             if let snapshot = provider.snapshot {
+                if let displayName = snapshot.accountEmail ?? snapshot.accountOrganization {
+                    accountCard(displayName: displayName, snapshot: snapshot)
+                }
                 statsGrid(snapshot: snapshot)
             } else if provider.isSyncing {
                 LoadingSpinnerView()

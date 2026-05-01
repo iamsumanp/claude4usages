@@ -172,8 +172,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             isSessionActive: sessionMonitor.activeSession != nil,
             button: statusItem?.button
         )
-        // Tell the system this image is intrinsically sized
-        image.size = NSSize(width: image.size.width, height: 22)
+        // Don't override .size — the renderer already produces an 18pt-tall image
+        // and the status bar will scale to fit. Forcing height stretches the bitmap.
         return image
     }
 

@@ -634,12 +634,25 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
 
     internal func cleanResetText(_ text: String?) -> String? {
         guard let text else { return nil }
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        // If it doesn't start with "Resets", add it
-        if trimmed.lowercased().hasPrefix("reset") {
-            return trimmed
+        // Drop anything from a `[`, `|`, `⎿`, control char, or extended whitespace onward —
+        // these are leftovers from Claude's TUI redraw (e.g. `[>0q`, `| SessionStart...`).
+        let stopChars: [Character] = ["[", "|", "⎿", "│", "╮", "╯", "─", "\t"]
+        if let stop = trimmed.firstIndex(where: { stopChars.contains($0) || $0.asciiValue.map { $0 < 0x20 } == true }) {
+            trimmed = String(trimmed[..<stop]).trimmingCharacters(in: .whitespaces)
+        }
+
+        // Compress repeated whitespace runs to a single space
+        trimmed = trimmed.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+
+        guard !trimmed.isEmpty else { return nil }
+
+        // Match patterns like: "Resets 8:55pm (TZ)", "Resets in 2h 15m", "Resets Jan 1"
+        // If we have a "resets" word, take from there; otherwise prepend "Resets ".
+        if let resetsRange = trimmed.range(of: "reset", options: .caseInsensitive) {
+            return String(trimmed[resetsRange.lowerBound...])
         }
         return "Resets \(trimmed)"
     }

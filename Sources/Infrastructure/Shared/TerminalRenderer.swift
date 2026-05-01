@@ -40,9 +40,10 @@ public final class TerminalRenderer {
             result = rebuilt
         }
 
-        // Strip remaining CSI sequences: ESC[ params final-letter (e.g. SGR `m`,
-        // cursor moves A/B/D/E/F/G/H, clears J/K, scroll regions, etc.)
-        if let regex = try? NSRegularExpression(pattern: "\u{1B}\\[[0-9;?]*[A-Za-z]") {
+        // Strip remaining CSI sequences: ESC[ <intermediates> <params> <final-byte>
+        // Intermediates can include `>`, `<`, `=`, `?` for private modes / DEC queries
+        // (e.g. `\x1B[>0q`, `\x1B[?25h`). Final byte is any letter.
+        if let regex = try? NSRegularExpression(pattern: "\u{1B}\\[[<>=?]*[0-9;]*[A-Za-z]") {
             let range = NSRange(result.startIndex..., in: result)
             result = regex.stringByReplacingMatches(in: result, range: range, withTemplate: "")
         }

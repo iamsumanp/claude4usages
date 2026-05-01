@@ -44,24 +44,6 @@ struct DailyUsageCardView: View {
                     .foregroundStyle(theme.textTertiary)
             }
 
-            // Progress bar
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(theme.progressTrack)
-
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(LinearGradient(
-                            colors: [metric.color.opacity(0.8), metric.color],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ))
-                        .frame(width: animateProgress ? geo.size.width * progress : 0)
-                        .animation(.spring(response: 0.8, dampingFraction: 0.7).delay(delay + 0.2), value: animateProgress)
-                }
-            }
-            .frame(height: 5)
-
             // Delta comparison line
             if let deltaText = formattedDelta {
                 HStack(spacing: 3) {

@@ -80,6 +80,7 @@ struct MenuContentView: View {
                     VStack(spacing: 12) {
                         metricsContent
                     }
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
 

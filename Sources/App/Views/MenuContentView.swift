@@ -230,24 +230,24 @@ struct MenuContentView: View {
 
     private var headerView: some View {
         HStack(spacing: 12) {
-            // Custom Provider Icon - shows AppLogo in overview mode, provider icon otherwise
-            // Avoid animation on provider icon to prevent constraint update loops in MenuBarExtra
+            // App icon — the same Anthropic-style asterisk used in the menu bar (monochrome).
             ZStack {
-                if settings.overviewModeEnabled, let logo = NSImage(named: "AppLogo") {
-                    Image(nsImage: logo)
+                if let asterisk = AppIconResource.image(monochrome: true) {
+                    Image(nsImage: asterisk)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 38, height: 38)
-                        .clipShape(Circle())
-                        .overlay(
+                        .renderingMode(.template)
+                        .aspectRatio(contentMode: .fit)
+                        .foregroundStyle(theme.textPrimary)
+                        .frame(width: 24, height: 24)
+                        .padding(7)
+                        .background(
                             Circle()
-                                .stroke(theme.accentPrimary.opacity(0.3), lineWidth: 2)
+                                .stroke(theme.accentPrimary.opacity(0.4), lineWidth: 1)
                         )
-                        .shadow(color: theme.accentPrimary.opacity(0.15), radius: 3, y: 1)
+                        .frame(width: 38, height: 38)
                 } else {
                     ProviderIconView(providerId: selectedProviderId, size: 38)
                 }
-
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -411,8 +411,6 @@ struct MenuContentView: View {
 
     private func providerSection(provider: any AIProvider) -> some View {
         VStack(spacing: 8) {
-            providerSectionHeader(provider: provider)
-
             if let snapshot = provider.snapshot {
                 if let displayName = snapshot.accountEmail ?? snapshot.accountOrganization {
                     accountCard(displayName: displayName, snapshot: snapshot)

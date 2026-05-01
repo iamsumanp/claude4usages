@@ -66,8 +66,9 @@ struct DailyUsageCardView: View {
                 .frame(height: 5)
             }
 
-            // Delta vs previous day — split into two lines so the long
-            // "+$440.34 (440.8%)" payload stays legible on narrow cards.
+            // Delta vs previous day — written in plain English so it reads
+            // "$460.56 more than Apr 30 / +461% from yesterday" rather than
+            // a cryptic "+$460.56 (461%) vs Apr 30".
             if let parts = formattedDeltaParts {
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 3) {
@@ -78,9 +79,11 @@ struct DailyUsageCardView: View {
                     }
                     .foregroundStyle(deltaColor)
 
-                    Text(parts.subline)
-                        .font(.system(size: 8, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+                    if !parts.subline.isEmpty {
+                        Text(parts.subline)
+                            .font(.system(size: 8, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
                 }
                 .lineLimit(1)
             }
@@ -157,37 +160,54 @@ struct DailyUsageCardView: View {
         }
     }
 
-    /// Two-line breakdown of the delta — `headline` is the ↑/↓ delta value,
-    /// `subline` is the calendar context. Easier to scan than the original
-    /// crammed single line.
+    /// Two-line breakdown of the delta written in plain English.
+    /// `headline` is e.g. `"$460.56 more than Apr 30"`, `subline` is `"+461% from yesterday"`.
     private var formattedDeltaParts: (arrow: String, headline: String, subline: String)? {
         guard !report.previous.isEmpty else { return nil }
         let date = report.previous.formattedDate
 
-        let (delta, pct, isUp): (String, Double?, Bool)
+        let (delta, pct, isUp, hasChange): (String, Double?, Bool, Bool)
         switch metric {
         case .cost:
-            delta = report.formattedCostDelta
+            delta = report.formattedCostDelta.replacingOccurrences(of: "+", with: "").replacingOccurrences(of: "-", with: "")
             pct = report.costChangePercent
             isUp = report.costDelta > 0
+            hasChange = report.costDelta != 0
         case .tokens:
-            delta = report.formattedTokenDelta
+            delta = report.formattedTokenDelta.replacingOccurrences(of: "+", with: "").replacingOccurrences(of: "-", with: "")
             pct = report.tokenChangePercent
             isUp = report.tokenDelta > 0
+            hasChange = report.tokenDelta != 0
         case .workingTime:
-            delta = report.formattedTimeDelta
+            delta = report.formattedTimeDelta.replacingOccurrences(of: "+", with: "").replacingOccurrences(of: "-", with: "")
             pct = report.timeChangePercent
             isUp = report.timeDelta > 0
+            hasChange = report.timeDelta != 0
         }
 
-        let arrow = isUp ? "arrow.up" : "arrow.down"
-        let headline: String
-        if let pct {
-            headline = "\(delta) (\(String(format: "%.0f", abs(pct)))%)"
+        let arrow: String
+        let comparator: String
+        if !hasChange {
+            arrow = "equal"
+            comparator = "same as"
+        } else if isUp {
+            arrow = "arrow.up"
+            comparator = "more than"
         } else {
-            headline = delta
+            arrow = "arrow.down"
+            comparator = "less than"
         }
-        return (arrow, headline, "vs \(date)")
+
+        let headline = hasChange ? "\(delta) \(comparator) \(date)" : "Same as \(date)"
+        let subline: String
+        if let pct, hasChange {
+            let sign = isUp ? "+" : "−"
+            subline = "\(sign)\(String(format: "%.0f", abs(pct)))% from yesterday"
+        } else {
+            subline = ""
+        }
+
+        return (arrow, headline, subline)
     }
 }
 

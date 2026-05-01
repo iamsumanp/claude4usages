@@ -225,15 +225,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hookServer.stop()
     }
 
-    // MARK: - Hook-driven busy indicator
+    // MARK: - Hook-driven completion blink
 
-    /// Green on SessionStart (Claude starts thinking), white on SessionEnd/Stop (answer done).
+    private var blinkTask: Task<Void, Never>?
+
+    /// Blinks green 3 times when Claude finishes answering so you know to look back.
     private func handleSessionEventForIcon(_ event: SessionEvent) {
         switch event.eventName {
-        case .sessionStart, .subagentStart:
-            isIconSessionActive = true
-        case .sessionEnd, .stop:
-            isIconSessionActive = false
+        case .stop, .sessionEnd:
+            blinkTask?.cancel()
+            blinkTask = Task { @MainActor in
+                for _ in 0..<3 {
+                    guard !Task.isCancelled else { return }
+                    isIconSessionActive = true
+                    try? await Task.sleep(for: .milliseconds(400))
+                    guard !Task.isCancelled else { return }
+                    isIconSessionActive = false
+                    try? await Task.sleep(for: .milliseconds(300))
+                }
+            }
         default:
             break
         }

@@ -413,37 +413,30 @@ public final class MenuBarIconRenderer {
         defer { image.unlockFocus() }
 
         let center = NSPoint(x: size.width / 2, y: size.height / 2)
-        let outerRadius: CGFloat = size.width * 0.45
-        let petalWidth: CGFloat = size.width * 0.20
+        let longRadius: CGFloat = size.width * 0.48
+        let shortRadius: CGFloat = size.width * 0.28
+        let rayHalfWidth: CGFloat = 0.65
 
         let fillColor: NSColor = isMonochrome ? .black : NSColor(srgbRed: 0.84, green: 0.45, blue: 0.27, alpha: 1.0)
         fillColor.setFill()
 
         let path = NSBezierPath()
-        for arm in 0..<4 {
-            let angle = CGFloat(arm) * .pi / 2
+        for ray in 0..<8 {
+            let angle = CGFloat(ray) * (.pi / 4)
+            let isCardinal = ray % 2 == 0
+            let radius = isCardinal ? longRadius : shortRadius
+
             let dx = cos(angle)
             let dy = sin(angle)
-            let tipX = center.x + dx * outerRadius
-            let tipY = center.y + dy * outerRadius
-            let baseX = center.x - dx * (petalWidth * 0.4)
-            let baseY = center.y - dy * (petalWidth * 0.4)
-            let halfWidth = petalWidth / 2
-            let perpX = -dy * halfWidth
-            let perpY = dx * halfWidth
+            let perpX = -dy * rayHalfWidth
+            let perpY = dx * rayHalfWidth
+
+            let tipX = center.x + dx * radius
+            let tipY = center.y + dy * radius
 
             path.move(to: NSPoint(x: tipX, y: tipY))
-            path.curve(
-                to: NSPoint(x: baseX + perpX, y: baseY + perpY),
-                controlPoint1: NSPoint(x: center.x + dx * outerRadius * 0.4 + perpX * 0.6, y: center.y + dy * outerRadius * 0.4 + perpY * 0.6),
-                controlPoint2: NSPoint(x: center.x + perpX, y: center.y + perpY)
-            )
-            path.line(to: NSPoint(x: baseX - perpX, y: baseY - perpY))
-            path.curve(
-                to: NSPoint(x: tipX, y: tipY),
-                controlPoint1: NSPoint(x: center.x - perpX, y: center.y - perpY),
-                controlPoint2: NSPoint(x: center.x + dx * outerRadius * 0.4 - perpX * 0.6, y: center.y + dy * outerRadius * 0.4 - perpY * 0.6)
-            )
+            path.line(to: NSPoint(x: center.x + perpX, y: center.y + perpY))
+            path.line(to: NSPoint(x: center.x - perpX, y: center.y - perpY))
             path.close()
         }
         path.fill()

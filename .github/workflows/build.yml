@@ -1,0 +1,42 @@
+name: Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+
+env:
+  SWIFT_VERSION: "6.2"
+
+jobs:
+  build:
+    name: Build and Verify
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
+
+      - name: Install Tuist
+        run: brew install --cask tuist
+
+      - name: Install Dependencies
+        run: tuist install
+
+      - name: Generate Project
+        run: |
+          tuist generate --no-open
+          ./scripts/fix-swiftterm-metal.sh
+
+      - name: Build Debug
+        run: xcodebuild build -scheme ClaudeBar -workspace ClaudeBar.xcworkspace -destination 'platform=macOS,arch=arm64'
+
+      - name: Build Release
+        run: xcodebuild build -scheme ClaudeBar -workspace ClaudeBar.xcworkspace -destination 'platform=macOS,arch=arm64' -configuration Release

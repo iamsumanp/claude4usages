@@ -645,24 +645,28 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
         // as "Rese s" after column-offset writes). Don't try to recover the literal
         // word — just pull out the time portion and rebuild a clean "Resets ..." string.
 
-        // 1. Clock time with optional am/pm and optional `(timezone)` suffix
+        // `extractFirst` returns capture-group 1, so wrap each whole pattern in `(...)`.
+        // Try the most specific (calendar date + time + tz) first so weekly resets
+        // like "May 8 at 6:44pm (Asia/Katmandu)" don't get truncated to just the time.
+
+        // 1. Calendar date with optional time/tz: "May 8", "May 8 at 6:44pm (Asia/Katmandu)"
+        let datePattern = #"((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}(?:\s+(?:at\s+)?\d{1,2}:\d{2}\s*(?:am|pm|AM|PM)?(?:\s*\([^)]+\))?)?)"#
+        if let match = extractFirst(pattern: datePattern, text: text) {
+            return "Resets \(match.trimmingCharacters(in: .whitespaces))"
+        }
+
+        // 2. Clock time with optional am/pm and optional `(timezone)` suffix
         //    Examples: "8:55pm", "8:55 PM", "8:55pm (Asia/Katmandu)", "11:00 (UTC)"
-        let clockPattern = #"\d{1,2}:\d{2}\s*(?:am|pm|AM|PM)?(?:\s*\([^)]+\))?"#
+        let clockPattern = #"(\d{1,2}:\d{2}\s*(?:am|pm|AM|PM)?(?:\s*\([^)]+\))?)"#
         if let match = extractFirst(pattern: clockPattern, text: text) {
             return "Resets \(match.trimmingCharacters(in: .whitespaces))"
         }
 
-        // 2. Relative duration: "in 2h 15m", "2h", "30m", "in 30m"
-        let durationPattern = #"(?:in\s+)?\d+(?:h(?:\s+\d+m)?|m|d(?:\s+\d+h)?)"#
+        // 3. Relative duration: "in 2h 15m", "2h", "30m", "in 30m"
+        let durationPattern = #"((?:in\s+)?\d+(?:h(?:\s+\d+m)?|m|d(?:\s+\d+h)?))"#
         if let match = extractFirst(pattern: durationPattern, text: text) {
             let cleaned = match.trimmingCharacters(in: .whitespaces)
             return cleaned.lowercased().hasPrefix("in") ? "Resets \(cleaned)" : "Resets in \(cleaned)"
-        }
-
-        // 3. Calendar date: "Jan 15", "Mar 3 4:00pm"
-        let datePattern = #"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}(?:\s+\d{1,2}:\d{2}\s*(?:am|pm|AM|PM)?)?"#
-        if let match = extractFirst(pattern: datePattern, text: text) {
-            return "Resets \(match.trimmingCharacters(in: .whitespaces))"
         }
 
         return nil

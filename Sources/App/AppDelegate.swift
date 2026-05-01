@@ -22,8 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Token used to cancel + re-register observation tracking when re-rendering the icon
     private var iconRedrawToken: UInt = 0
 
-    // Process-based active state: green exactly while `claude` is in the OS process list.
-    private var processPollingTask: Task<Void, Never>?
+    // Hook-driven busy indicator: green while Claude is actively responding, white when idle.
     private var isIconSessionActive: Bool = false {
         didSet {
             guard isIconSessionActive != oldValue else { return }
@@ -111,9 +110,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Reactive icon updates — re-render whenever monitor / sessionMonitor / settings change
         scheduleIconRedraw()
-
-        // Poll pgrep every 3s — icon is green exactly as long as `claude` is in process list
-        startProcessPolling()
     }
 
     // MARK: - Status Item Setup
@@ -229,41 +225,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hookServer.stop()
     }
 
-    // MARK: - Process-based active detection
+    // MARK: - Hook-driven busy indicator
 
-    /// Polls `pgrep -x claude` every 3 seconds on a background thread.
-    /// Only hops to the main actor when the result changes, to update the icon.
-    func startProcessPolling() {
-        processPollingTask?.cancel()
-        processPollingTask = Task.detached(priority: .background) { [weak self] in
-            while !Task.isCancelled {
-                let active = Self.isClaudeProcessRunning()
-                await MainActor.run { [weak self] in
-                    guard let self, active != self.isIconSessionActive else { return }
-                    self.isIconSessionActive = active
-                }
-                try? await Task.sleep(for: .seconds(3))
-            }
-        }
-    }
-
-    /// Runs `pgrep -x claude` synchronously on whatever thread calls it.
-    /// Must NOT be called on @MainActor — use Task.detached or a background thread.
-    private nonisolated static func isClaudeProcessRunning() -> Bool {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
-        process.arguments = ["-x", "claude"]
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        try? process.run()
-        process.waitUntilExit()
-        return process.terminationStatus == 0
-    }
-
+    /// Green on SessionStart (Claude starts thinking), white on SessionEnd/Stop (answer done).
     private func handleSessionEventForIcon(_ event: SessionEvent) {
-        // Process polling drives the icon — no action needed per-event.
-        // Kept for potential future use (e.g. per-event notifications).
-        _ = event
+        switch event.eventName {
+        case .sessionStart, .subagentStart:
+            isIconSessionActive = true
+        case .sessionEnd, .stop:
+            isIconSessionActive = false
+        default:
+            break
+        }
     }
 
     // MARK: - Session Notifications

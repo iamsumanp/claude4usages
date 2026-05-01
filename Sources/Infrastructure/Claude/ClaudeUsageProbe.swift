@@ -634,27 +634,32 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
 
     internal func cleanResetText(_ text: String?) -> String? {
         guard let text else { return nil }
-        var trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
 
-        // Drop anything from a `[`, `|`, `⎿`, control char, or extended whitespace onward —
-        // these are leftovers from Claude's TUI redraw (e.g. `[>0q`, `| SessionStart...`).
-        let stopChars: [Character] = ["[", "|", "⎿", "│", "╮", "╯", "─", "\t"]
-        if let stop = trimmed.firstIndex(where: { stopChars.contains($0) || $0.asciiValue.map { $0 < 0x20 } == true }) {
-            trimmed = String(trimmed[..<stop]).trimmingCharacters(in: .whitespaces)
+        // The TUI's cursor-positioning often fragments words (e.g. "Resets" rendered
+        // as "Rese s" after column-offset writes). Don't try to recover the literal
+        // word — just pull out the time portion and rebuild a clean "Resets ..." string.
+
+        // 1. Clock time with optional am/pm and optional `(timezone)` suffix
+        //    Examples: "8:55pm", "8:55 PM", "8:55pm (Asia/Katmandu)", "11:00 (UTC)"
+        let clockPattern = #"\d{1,2}:\d{2}\s*(?:am|pm|AM|PM)?(?:\s*\([^)]+\))?"#
+        if let match = extractFirst(pattern: clockPattern, text: text) {
+            return "Resets \(match.trimmingCharacters(in: .whitespaces))"
         }
 
-        // Compress repeated whitespace runs to a single space
-        trimmed = trimmed.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-
-        guard !trimmed.isEmpty else { return nil }
-
-        // Match patterns like: "Resets 8:55pm (TZ)", "Resets in 2h 15m", "Resets Jan 1"
-        // If we have a "resets" word, take from there; otherwise prepend "Resets ".
-        if let resetsRange = trimmed.range(of: "reset", options: .caseInsensitive) {
-            return String(trimmed[resetsRange.lowerBound...])
+        // 2. Relative duration: "in 2h 15m", "2h", "30m", "in 30m"
+        let durationPattern = #"(?:in\s+)?\d+(?:h(?:\s+\d+m)?|m|d(?:\s+\d+h)?)"#
+        if let match = extractFirst(pattern: durationPattern, text: text) {
+            let cleaned = match.trimmingCharacters(in: .whitespaces)
+            return cleaned.lowercased().hasPrefix("in") ? "Resets \(cleaned)" : "Resets in \(cleaned)"
         }
-        return "Resets \(trimmed)"
+
+        // 3. Calendar date: "Jan 15", "Mar 3 4:00pm"
+        let datePattern = #"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}(?:\s+\d{1,2}:\d{2}\s*(?:am|pm|AM|PM)?)?"#
+        if let match = extractFirst(pattern: datePattern, text: text) {
+            return "Resets \(match.trimmingCharacters(in: .whitespaces))"
+        }
+
+        return nil
     }
 
     internal func parseResetDate(_ text: String?) -> Date? {

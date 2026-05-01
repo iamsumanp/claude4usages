@@ -44,16 +44,44 @@ struct DailyUsageCardView: View {
                     .foregroundStyle(theme.textTertiary)
             }
 
-            // Delta comparison line
-            if let deltaText = formattedDelta {
-                HStack(spacing: 3) {
-                    Image(systemName: "arrow.triangle.swap")
-                        .font(.system(size: 7))
+            // Progress bar — only useful for working time (a fraction of a day);
+            // for cost/tokens the bar is a confusing "today vs yesterday" ratio
+            // that the delta line below already states clearly.
+            if metric == .workingTime {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(theme.progressTrack)
 
-                    Text(deltaText)
-                        .font(.system(size: 8, weight: .medium, design: theme.fontDesign))
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(LinearGradient(
+                                colors: [metric.color.opacity(0.8), metric.color],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ))
+                            .frame(width: animateProgress ? geo.size.width * progress : 0)
+                            .animation(.spring(response: 0.8, dampingFraction: 0.7).delay(delay + 0.2), value: animateProgress)
+                    }
                 }
-                .foregroundStyle(deltaColor)
+                .frame(height: 5)
+            }
+
+            // Delta vs previous day — split into two lines so the long
+            // "+$440.34 (440.8%)" payload stays legible on narrow cards.
+            if let parts = formattedDeltaParts {
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 3) {
+                        Image(systemName: parts.arrow)
+                            .font(.system(size: 8, weight: .bold))
+                        Text(parts.headline)
+                            .font(.system(size: 10, weight: .semibold, design: theme.fontDesign))
+                    }
+                    .foregroundStyle(deltaColor)
+
+                    Text(parts.subline)
+                        .font(.system(size: 8, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
                 .lineLimit(1)
             }
         }
@@ -127,6 +155,39 @@ struct DailyUsageCardView: View {
         case .workingTime:
             return theme.textTertiary
         }
+    }
+
+    /// Two-line breakdown of the delta — `headline` is the ↑/↓ delta value,
+    /// `subline` is the calendar context. Easier to scan than the original
+    /// crammed single line.
+    private var formattedDeltaParts: (arrow: String, headline: String, subline: String)? {
+        guard !report.previous.isEmpty else { return nil }
+        let date = report.previous.formattedDate
+
+        let (delta, pct, isUp): (String, Double?, Bool)
+        switch metric {
+        case .cost:
+            delta = report.formattedCostDelta
+            pct = report.costChangePercent
+            isUp = report.costDelta > 0
+        case .tokens:
+            delta = report.formattedTokenDelta
+            pct = report.tokenChangePercent
+            isUp = report.tokenDelta > 0
+        case .workingTime:
+            delta = report.formattedTimeDelta
+            pct = report.timeChangePercent
+            isUp = report.timeDelta > 0
+        }
+
+        let arrow = isUp ? "arrow.up" : "arrow.down"
+        let headline: String
+        if let pct {
+            headline = "\(delta) (\(String(format: "%.0f", abs(pct)))%)"
+        } else {
+            headline = delta
+        }
+        return (arrow, headline, "vs \(date)")
     }
 }
 

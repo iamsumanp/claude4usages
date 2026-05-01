@@ -425,7 +425,9 @@ struct MenuContentView: View {
                 }
             }
         }
+        .scrollBounceBehavior(.basedOnSize)
         .frame(maxHeight: overviewMaxHeight)
+        .fixedSize(horizontal: false, vertical: true)
         .opacity(animateIn ? 1 : 0)
         .animation(.easeOut(duration: 0.5).delay(0.2), value: animateIn)
     }

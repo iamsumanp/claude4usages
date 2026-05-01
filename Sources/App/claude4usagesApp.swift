@@ -44,8 +44,7 @@ struct claude4usagesApp: App {
         // Each probe checks isAvailable() for credentials/prerequisites
         let repository = AIProviders(providers: [
             ClaudeProvider(
-                cliProbe: ClaudeUsageProbe(),
-                apiProbe: ClaudeAPIUsageProbe(),
+                probe: ClaudeUsageProbe(),
                 passProbe: ClaudePassProbe(),
                 settingsRepository: settingsRepository,
                 dailyUsageAnalyzer: ClaudeDailyUsageAnalyzer()

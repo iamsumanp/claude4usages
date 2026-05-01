@@ -152,12 +152,12 @@ struct claude4usagesApp: App {
                 .appThemeProvider(themeModeId: settings.themeMode)
         } label: {
             MenuBarIconView(
-                snapshot: monitor.selectedProvider?.snapshot,
+                monitor: monitor,
+                sessionMonitor: sessionMonitor,
                 displayMode: settings.menuBarIconDisplayMode,
                 styleMode: settings.menuBarIconStyleMode,
                 activeTypes: settings.menuBarIconActiveTypes,
-                hasUpdate: false,
-                isSessionActive: sessionMonitor.activeSession != nil
+                hasUpdate: false
             )
         }
         .menuBarExtraStyle(.window)

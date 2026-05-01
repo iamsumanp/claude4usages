@@ -289,7 +289,11 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
         }
 
         // Extract percentages
-        let sessionPct = extractPercent(labelSubstring: "Current session", text: clean)
+        // Use "session" (not "Current session") because Claude's TUI sometimes
+        // splits the word "Current" with cursor-positioning escapes — yielding
+        // "Curre t session" after ANSI normalization. "session" alone is unique
+        // to the session line (other labels are "Current week (all|Sonnet|Opus)").
+        let sessionPct = extractPercent(labelSubstring: "session", text: clean)
         let weeklyPct = extractPercent(labelSubstring: "Current week (all models)", text: clean)
         // Check for model-specific quota (Opus or Sonnet)
         let opusPct = extractPercent(labelSubstring: "Current week (Opus)", text: clean)
@@ -306,7 +310,7 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
         }
 
         // Extract reset times
-        let sessionReset = extractReset(labelSubstring: "Current session", text: clean)
+        let sessionReset = extractReset(labelSubstring: "session", text: clean)
         let weeklyReset = extractReset(labelSubstring: "Current week", text: clean)
 
         // Build quotas

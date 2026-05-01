@@ -225,24 +225,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hookServer.stop()
     }
 
-    // MARK: - Hook-driven completion blink
+    // MARK: - Hook-driven completion pulse
 
     private var blinkTask: Task<Void, Never>?
 
-    /// Blinks green 3 times (slowly) when Claude finishes answering.
+    /// When Claude finishes, icon turns green and softly pulses opacity
+    /// (full → dim → full) 3 times, then returns to normal.
     private func handleSessionEventForIcon(_ event: SessionEvent) {
         switch event.eventName {
         case .stop, .sessionEnd:
             blinkTask?.cancel()
             blinkTask = Task { @MainActor in
+                guard let button = statusItem?.button else { return }
+
+                // Show green for the whole pulse sequence
+                isIconSessionActive = true
+
+                let steps = 16
+                let stepMs: UInt64 = 55  // ~880ms per fade direction, ~1.76s per cycle
+
                 for _ in 0..<3 {
-                    guard !Task.isCancelled else { return }
-                    isIconSessionActive = true
-                    try? await Task.sleep(for: .milliseconds(1200))
-                    guard !Task.isCancelled else { return }
-                    isIconSessionActive = false
-                    try? await Task.sleep(for: .milliseconds(800))
+                    // Fade out: 1.0 → 0.25
+                    for s in 0...steps {
+                        guard !Task.isCancelled else { break }
+                        button.alphaValue = CGFloat(1.0 - Double(s) / Double(steps) * 0.75)
+                        try? await Task.sleep(nanoseconds: stepMs * 1_000_000)
+                    }
+                    // Fade in: 0.25 → 1.0
+                    for s in 0...steps {
+                        guard !Task.isCancelled else { break }
+                        button.alphaValue = CGFloat(0.25 + Double(s) / Double(steps) * 0.75)
+                        try? await Task.sleep(nanoseconds: stepMs * 1_000_000)
+                    }
                 }
+
+                button.alphaValue = 1.0
+                isIconSessionActive = false
             }
         default:
             break

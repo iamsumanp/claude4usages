@@ -50,7 +50,7 @@ struct SettingsContentView: View {
                 VStack(spacing: 12) {
                     displayModeCard
                     menuBarIconCard
-                    overviewModeCard
+
                     if isClaudeEnabled {
                         ClaudeConfigCard(monitor: monitor)
                             .transition(.opacity.combined(with: .move(edge: .top)))

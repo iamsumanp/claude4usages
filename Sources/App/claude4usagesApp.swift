@@ -6,11 +6,11 @@ import Sparkle
 #endif
 
 extension Notification.Name {
-    static let hookSettingsChanged = Notification.Name("com.tddworks.claudebar.hookSettingsChanged")
+    static let hookSettingsChanged = Notification.Name("com.claude4usages.hookSettingsChanged")
 }
 
 @main
-struct ClaudeBarApp: App {
+struct claude4usagesApp: App {
     /// The main domain service - monitors all AI providers
     /// This is the single source of truth for providers and their state
     @State private var monitor: QuotaMonitor
@@ -38,9 +38,9 @@ struct ClaudeBarApp: App {
     init() {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        AppLog.ui.info("ClaudeBar v\(version) (\(build)) initializing...")
+        AppLog.ui.info("claude4usages v\(version) (\(build)) initializing...")
 
-        // Create the shared settings repository (JSON-backed: ~/.claudebar/settings.json)
+        // Create the shared settings repository (JSON-backed: ~/.claude4usages/settings.json)
         // JSONSettingsRepository implements all sub-protocols:
         // - AppSettingsRepository (app-level display/sync settings)
         // - ProviderSettingsRepository + all provider sub-protocols
@@ -109,7 +109,7 @@ struct ClaudeBarApp: App {
         )
         AppLog.monitor.info("QuotaMonitor initialized")
 
-        // Load user extensions from ~/.claudebar/extensions/
+        // Load user extensions from ~/.claude4usages/extensions/
         let extensionRegistry = ExtensionRegistry(
             settingsRepository: settingsRepository,
             configRepository: AppSettings.shared.extensionConfig
@@ -127,7 +127,7 @@ struct ClaudeBarApp: App {
         // Note: Notification permission is requested in onAppear, not here
         // Menu bar apps need the run loop to be active before requesting permissions
 
-        AppLog.ui.info("ClaudeBar initialization complete")
+        AppLog.ui.info("claude4usages initialization complete")
     }
 
     /// App settings for theme

@@ -407,40 +407,12 @@ public final class MenuBarIconRenderer {
     }
 
     private func loadAppIconImage(isMonochrome: Bool) -> NSImage? {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size)
-        image.lockFocus()
-        defer { image.unlockFocus() }
-
-        let center = NSPoint(x: size.width / 2, y: size.height / 2)
-        let longRadius: CGFloat = size.width * 0.48
-        let shortRadius: CGFloat = size.width * 0.28
-        let rayHalfWidth: CGFloat = 0.65
-
-        let fillColor: NSColor = isMonochrome ? .black : NSColor(srgbRed: 0.84, green: 0.45, blue: 0.27, alpha: 1.0)
-        fillColor.setFill()
-
-        let path = NSBezierPath()
-        for ray in 0..<8 {
-            let angle = CGFloat(ray) * (.pi / 4)
-            let isCardinal = ray % 2 == 0
-            let radius = isCardinal ? longRadius : shortRadius
-
-            let dx = cos(angle)
-            let dy = sin(angle)
-            let perpX = -dy * rayHalfWidth
-            let perpY = dx * rayHalfWidth
-
-            let tipX = center.x + dx * radius
-            let tipY = center.y + dy * radius
-
-            path.move(to: NSPoint(x: tipX, y: tipY))
-            path.line(to: NSPoint(x: center.x + perpX, y: center.y + perpY))
-            path.line(to: NSPoint(x: center.x - perpX, y: center.y - perpY))
-            path.close()
+        let resourceName = isMonochrome ? "AppIconReverse" : "AppIcon"
+        guard let url = Bundle.module.url(forResource: resourceName, withExtension: "png"),
+              let image = NSImage(contentsOf: url) else {
+            return nil
         }
-        path.fill()
-
+        image.size = NSSize(width: 18, height: 18)
         image.isTemplate = isMonochrome
         return image
     }

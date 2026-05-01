@@ -469,7 +469,7 @@ struct MenuContentView: View {
                 .font(.system(size: 12))
                 .foregroundStyle(theme.statusWarning)
 
-            Text(provider.lastError?.localizedDescription ?? "Unavailable")
+            Text("No usage data — tap Refresh")
                 .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .lineLimit(1)

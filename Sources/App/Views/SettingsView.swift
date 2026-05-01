@@ -9,7 +9,6 @@ struct SettingsContentView: View {
     @Environment(\.appTheme) private var theme
     @State private var settings = AppSettings.shared
 
-    @State private var providersExpanded: Bool = false
     @State private var backgroundSyncExpanded: Bool = false
 
     // Hook settings state
@@ -52,7 +51,6 @@ struct SettingsContentView: View {
                     displayModeCard
                     menuBarIconCard
                     overviewModeCard
-                    providersCard
                     if isClaudeEnabled {
                         ClaudeConfigCard(monitor: monitor)
                             .transition(.opacity.combined(with: .move(edge: .top)))
@@ -323,100 +321,6 @@ struct SettingsContentView: View {
                         .stroke(theme.glassBorder, lineWidth: 1)
                 )
         )
-    }
-
-    // MARK: - Providers Card
-
-    private var providersCard: some View {
-        DisclosureGroup(isExpanded: $providersExpanded) {
-            Divider()
-                .background(theme.glassBorder)
-                .padding(.vertical, 12)
-
-            // Provider toggles
-            VStack(spacing: 8) {
-                ForEach(monitor.allProviders, id: \.id) { provider in
-                    providerToggleRow(provider: provider)
-                }
-            }
-        } label: {
-            providersHeader
-                .contentShape(.rect)
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        providersExpanded.toggle()
-                    }
-                }
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                .fill(theme.cardGradient)
-                .overlay(
-                    RoundedRectangle(cornerRadius: theme.cardCornerRadius)
-                        .stroke(theme.glassBorder, lineWidth: 1)
-                )
-        )
-    }
-
-    private var providersHeader: some View {
-        HStack(spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill(theme.accentGradient)
-                    .frame(width: 32, height: 32)
-
-                Image(systemName: "cpu")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Providers")
-                    .font(.system(size: 14, weight: .bold, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-
-                Text("Enable or disable AI providers")
-                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-
-            Spacer()
-        }
-    }
-
-    private func providerToggleRow(provider: any AIProvider) -> some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 10) {
-                // Provider icon
-                ProviderIconView(providerId: provider.id, size: 20)
-
-                Text(provider.name)
-                    .font(.system(size: 12, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-
-                Spacer()
-
-                Toggle("", isOn: Binding(
-                    get: { provider.isEnabled },
-                    set: { newValue in
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            monitor.setProviderEnabled(provider.id, enabled: newValue)
-                        }
-                    }
-                ))
-                .toggleStyle(.switch)
-                .tint(theme.accentPrimary)
-                .scaleEffect(0.8)
-                .labelsHidden()
-            }
-
-            if provider.isEnabled {
-                CustomCardURLField(providerId: provider.id)
-                    .padding(.leading, 30)
-            }
-        }
-        .padding(.vertical, 4)
     }
 
     // MARK: - Header

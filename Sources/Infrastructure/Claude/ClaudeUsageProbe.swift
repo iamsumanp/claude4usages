@@ -309,9 +309,11 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
             throw ProbeError.parseFailed("Could not find session usage")
         }
 
-        // Extract reset times
-        let sessionReset = extractReset(labelSubstring: "session", text: clean)
-        let weeklyReset = extractReset(labelSubstring: "Current week", text: clean)
+        // Extract reset times — clean first, then parse, so parseResetDate sees
+        // a tidy "Resets 8:55pm (Asia/Katmandu)" rather than the broken-render
+        // line that surrounds it.
+        let sessionResetClean = cleanResetText(extractReset(labelSubstring: "session", text: clean))
+        let weeklyResetClean = cleanResetText(extractReset(labelSubstring: "Current week", text: clean))
 
         // Build quotas
         var quotas: [UsageQuota] = []
@@ -320,8 +322,8 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
             percentRemaining: Double(sessionPct),
             quotaType: .session,
             providerId: "claude",
-            resetsAt: parseResetDate(sessionReset),
-            resetText: cleanResetText(sessionReset)
+            resetsAt: parseResetDate(sessionResetClean),
+            resetText: sessionResetClean
         ))
 
         if let weeklyPct {
@@ -329,8 +331,8 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
                 percentRemaining: Double(weeklyPct),
                 quotaType: .weekly,
                 providerId: "claude",
-                resetsAt: parseResetDate(weeklyReset),
-                resetText: cleanResetText(weeklyReset)
+                resetsAt: parseResetDate(weeklyResetClean),
+                resetText: weeklyResetClean
             ))
         }
 
@@ -339,8 +341,8 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
                 percentRemaining: Double(opusPct),
                 quotaType: .modelSpecific("opus"),
                 providerId: "claude",
-                resetsAt: parseResetDate(weeklyReset),
-                resetText: cleanResetText(weeklyReset)
+                resetsAt: parseResetDate(weeklyResetClean),
+                resetText: weeklyResetClean
             ))
         }
 
@@ -349,8 +351,8 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
                 percentRemaining: Double(sonnetPct),
                 quotaType: .modelSpecific("sonnet"),
                 providerId: "claude",
-                resetsAt: parseResetDate(weeklyReset),
-                resetText: cleanResetText(weeklyReset)
+                resetsAt: parseResetDate(weeklyResetClean),
+                resetText: weeklyResetClean
             ))
         }
 

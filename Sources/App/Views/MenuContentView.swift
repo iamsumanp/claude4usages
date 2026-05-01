@@ -69,12 +69,8 @@ struct MenuContentView: View {
                             .padding(.bottom, 16)
                     }
 
-                    // Session Indicator (shown when Claude Code is active)
-                    if let session = sessionMonitor.activeSession {
-                        SessionIndicatorView(session: session)
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 8)
-                    }
+                    // Active session is conveyed by the menu bar icon's green tint —
+                    // no in-popover SessionIndicatorView needed.
 
                     // Main Content Area - no scroll, dynamic height
                     VStack(spacing: 12) {

@@ -238,10 +238,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 for _ in 0..<3 {
                     guard !Task.isCancelled else { return }
                     isIconSessionActive = true
-                    try? await Task.sleep(for: .milliseconds(400))
+                    try? await Task.sleep(for: .milliseconds(900))
                     guard !Task.isCancelled else { return }
                     isIconSessionActive = false
-                    try? await Task.sleep(for: .milliseconds(300))
+                    try? await Task.sleep(for: .milliseconds(600))
                 }
             }
         default:

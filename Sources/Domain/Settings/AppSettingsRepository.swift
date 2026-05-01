@@ -55,4 +55,15 @@ public protocol AppSettingsRepository: Sendable {
 
     func receiveBetaUpdates() -> Bool
     func setReceiveBetaUpdates(_ receive: Bool)
+
+    // MARK: - Menu Bar Icon settings
+
+    func menuBarIconDisplayMode() -> String
+    func setMenuBarIconDisplayMode(_ mode: String)
+
+    func menuBarIconStyleMode() -> String
+    func setMenuBarIconStyleMode(_ mode: String)
+
+    func menuBarIconActiveTypes() -> [String]
+    func setMenuBarIconActiveTypes(_ types: [String])
 }

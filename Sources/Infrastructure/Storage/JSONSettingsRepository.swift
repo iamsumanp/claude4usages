@@ -124,6 +124,33 @@ public final class JSONSettingsRepository:
         store.write(value: receive, key: "app.receiveBetaUpdates")
     }
 
+    // MARK: - Menu Bar Icon
+
+    public func menuBarIconDisplayMode() -> String {
+        store.read(key: "app.menuBarIcon.displayMode") ?? "both"
+    }
+
+    public func setMenuBarIconDisplayMode(_ mode: String) {
+        store.write(value: mode, key: "app.menuBarIcon.displayMode")
+    }
+
+    public func menuBarIconStyleMode() -> String {
+        store.read(key: "app.menuBarIcon.styleMode") ?? "colorTranslucent"
+    }
+
+    public func setMenuBarIconStyleMode(_ mode: String) {
+        store.write(value: mode, key: "app.menuBarIcon.styleMode")
+    }
+
+    public func menuBarIconActiveTypes() -> [String] {
+        store.read(key: "app.menuBarIcon.activeTypes")
+            ?? ["fiveHour", "sevenDay", "opusWeekly", "sonnetWeekly"]
+    }
+
+    public func setMenuBarIconActiveTypes(_ types: [String]) {
+        store.write(value: types, key: "app.menuBarIcon.activeTypes")
+    }
+
     // MARK: - ProviderSettingsRepository
 
     public func isEnabled(forProvider id: String, defaultValue: Bool) -> Bool {

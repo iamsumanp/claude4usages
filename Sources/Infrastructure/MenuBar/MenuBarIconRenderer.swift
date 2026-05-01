@@ -407,11 +407,47 @@ public final class MenuBarIconRenderer {
     }
 
     private func loadAppIconImage(isMonochrome: Bool) -> NSImage? {
-        guard let url = Bundle.module.url(forResource: "AppIcon", withExtension: "png"),
-              let image = NSImage(contentsOf: url) else {
-            return nil
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        defer { image.unlockFocus() }
+
+        let center = NSPoint(x: size.width / 2, y: size.height / 2)
+        let outerRadius: CGFloat = size.width * 0.45
+        let petalWidth: CGFloat = size.width * 0.20
+
+        let fillColor: NSColor = isMonochrome ? .black : NSColor(srgbRed: 0.84, green: 0.45, blue: 0.27, alpha: 1.0)
+        fillColor.setFill()
+
+        let path = NSBezierPath()
+        for arm in 0..<4 {
+            let angle = CGFloat(arm) * .pi / 2
+            let dx = cos(angle)
+            let dy = sin(angle)
+            let tipX = center.x + dx * outerRadius
+            let tipY = center.y + dy * outerRadius
+            let baseX = center.x - dx * (petalWidth * 0.4)
+            let baseY = center.y - dy * (petalWidth * 0.4)
+            let halfWidth = petalWidth / 2
+            let perpX = -dy * halfWidth
+            let perpY = dx * halfWidth
+
+            path.move(to: NSPoint(x: tipX, y: tipY))
+            path.curve(
+                to: NSPoint(x: baseX + perpX, y: baseY + perpY),
+                controlPoint1: NSPoint(x: center.x + dx * outerRadius * 0.4 + perpX * 0.6, y: center.y + dy * outerRadius * 0.4 + perpY * 0.6),
+                controlPoint2: NSPoint(x: center.x + perpX, y: center.y + perpY)
+            )
+            path.line(to: NSPoint(x: baseX - perpX, y: baseY - perpY))
+            path.curve(
+                to: NSPoint(x: tipX, y: tipY),
+                controlPoint1: NSPoint(x: center.x - perpX, y: center.y - perpY),
+                controlPoint2: NSPoint(x: center.x + dx * outerRadius * 0.4 - perpX * 0.6, y: center.y + dy * outerRadius * 0.4 - perpY * 0.6)
+            )
+            path.close()
         }
-        image.size = NSSize(width: 18, height: 18)
+        path.fill()
+
         image.isTemplate = isMonochrome
         return image
     }

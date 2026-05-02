@@ -312,7 +312,7 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
         // Extract reset times — clean first, then parse, so parseResetDate sees
         // a tidy "Resets 8:55pm (Asia/Katmandu)" rather than the broken-render
         // line that surrounds it.
-        let sessionResetClean = cleanResetText(extractReset(labelSubstring: "session", text: clean))
+        let sessionResetClean = cleanResetText(extractReset(labelSubstring: "session", text: clean, stopBefore: "current week"))
         let weeklyResetClean = cleanResetText(extractReset(labelSubstring: "Current week", text: clean))
 
         // Build quotas
@@ -542,15 +542,20 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
         return isUsed ? max(0, 100 - rawVal) : rawVal
     }
 
-    internal func extractReset(labelSubstring: String, text: String) -> String? {
+    internal func extractReset(labelSubstring: String, text: String, stopBefore: String? = nil) -> String? {
         let lines = text.components(separatedBy: .newlines)
         let label = labelSubstring.lowercased()
+        let stop = stopBefore?.lowercased()
         let clockRegex = try? NSRegularExpression(pattern: #"\d{1,2}:\d{2}"#)
         let monthRegex = try? NSRegularExpression(pattern: #"(?i)\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b"#)
 
         for (idx, line) in lines.enumerated() where line.lowercased().contains(label) {
             let window = lines.dropFirst(idx).prefix(14)
-            for candidate in window {
+            for (windowIdx, candidate) in window.enumerated() {
+                // Stop before a new section if requested (skip the first line which is the label itself)
+                if windowIdx > 0, let stop, candidate.lowercased().contains(stop) {
+                    return nil
+                }
                 let lower = candidate.lowercased()
                 let hasReset = lower.contains("reset") || lower.contains("rese")
                 let hasDuration = lower.contains("in ") && (lower.contains("h") || lower.contains("m"))

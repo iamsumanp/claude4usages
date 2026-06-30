@@ -27,6 +27,16 @@ echo "==> Assembling .app bundle"
 cp ".build/release/${BIN_NAME}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 chmod +x "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 
+# Copy SwiftPM resource bundles (e.g. claude4usages_Infrastructure.bundle) into
+# Contents/Resources so Bundle.module can locate them at runtime. Without this,
+# the first Bundle.module access (the popover's app-icon load) traps with a fatalError.
+echo "==> Copying resource bundles"
+for bundle in .build/release/*.bundle; do
+    [ -e "$bundle" ] || continue
+    cp -R "$bundle" "${APP_DIR}/Contents/Resources/"
+    echo "    + $(basename "$bundle")"
+done
+
 cat > "${APP_DIR}/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

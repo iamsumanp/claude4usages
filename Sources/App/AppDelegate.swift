@@ -7,6 +7,7 @@ import Infrastructure
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
+    private var eventMonitor: Any?
 
     // Domain state (was on claude4usagesApp)
     let monitor: QuotaMonitor
@@ -130,7 +131,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupPopover() {
         popover = NSPopover()
-        popover.behavior = .transient  // closes when clicking outside
+        // .applicationDefined prevents the transient-close race on macOS 15 where
+        // clicking the status bar button would dismiss the popover before togglePopover fired.
+        popover.behavior = .applicationDefined
         popover.animates = true
 
         let content = MenuContentView(
@@ -149,12 +152,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func togglePopover(_ sender: AnyObject?) {
-        guard let button = statusItem.button else { return }
         if popover.isShown {
-            popover.performClose(sender)
+            closePopover()
         } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            openPopover()
+        }
+    }
+
+    private func openPopover() {
+        guard let button = statusItem.button else { return }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
+        NSApp.activate(ignoringOtherApps: true)
+
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]
+        ) { [weak self] _ in
+            self?.closePopover()
+        }
+    }
+
+    private func closePopover() {
+        popover.performClose(nil)
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
         }
     }
 

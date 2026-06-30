@@ -870,9 +870,13 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
     internal func extractUsageError(_ text: String) -> ProbeError? {
         let lower = text.lowercased()
 
-        if (lower.contains("do you trust the files in this folder?") ||
-            lower.contains("is this a project you created or one you trust")),
-           !lower.contains("current session") {
+        // Trust-dialog detection. The trust dialog uses cursor-absolute escape sequences
+        // (ESC[NG) that the terminal renderer may not fully expand, so we check both the
+        // rendered text AND individual keywords that survive partial rendering.
+        let hasTrustKeywords = lower.contains("do you trust the files in this folder?")
+            || lower.contains("is this a project you created or one you trust")
+            || (lower.contains("yes, i trust this folder") && lower.contains("esc to cancel"))
+        if hasTrustKeywords, !lower.contains("current session") {
             AppLog.probes.error("Claude probe blocked: folder trust required")
             return .folderTrustRequired
         }
@@ -979,6 +983,9 @@ public final class ClaudeUsageProbe: UsageProbe, @unchecked Sendable {
             .appendingPathComponent("claude4usages", isDirectory: true)
             .appendingPathComponent("Probe", isDirectory: true)
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        // Proactively trust the probe directory so Claude's safety dialog never
+        // interrupts the probe. writeClaudeTrust is a no-op if already trusted.
+        _ = writeClaudeTrust(for: dir)
         return dir
     }
 }
